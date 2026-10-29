@@ -197,6 +197,21 @@ def validate_results(results_dir: Path, lossless_dir: Path | None = None):
     check(not ddf.duplicated(["image", "profile", "method"]).any(), "No duplicate image/profile/method delivery keys")
     check(not cdf.duplicated(["image", "ratio"]).any(), "No duplicate image/candidate-ratio keys")
     check(not mono["image"].duplicated().any(), "No duplicate monotonicity image keys")
+    manifest_images = set(mdf["image"])
+    check(set(qdf["image"]) == manifest_images, "Quality output covers exactly the manifest image set")
+    check(set(ddf["image"]) == manifest_images, "Delivery output covers exactly the manifest image set")
+    check(set(cdf["image"]) == manifest_images, "Candidate diagnostics cover exactly the manifest image set")
+    check(set(mono["image"]) == manifest_images, "Monotonicity diagnostics cover exactly the manifest image set")
+    check(bool((qdf.groupby("method")["image"].nunique() == EXPECTED_IMAGES).all()),
+          "Every single-stage method has one row for each of the 138 images")
+    delivery_image_counts = ddf.groupby(["method", "profile"])["image"].nunique()
+    check(bool((delivery_image_counts == EXPECTED_IMAGES).all()),
+          "Every method/profile delivery group has one row for each of the 138 images")
+    expected_ratios = {4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120}
+    check(set(cdf["ratio"].astype(int).unique()) == expected_ratios,
+          "Candidate diagnostics contain exactly the eleven documented ratio settings")
+    check(bool((cdf.groupby("image")["ratio"].nunique() == len(expected_ratios)).all()),
+          "Every image has all eleven candidate settings")
 
     check(set(qdf["method"].unique()) == {
         "B1_fixed_jpeg", "B2_fixed_j2k", "B3_mean_ssim_single", "P1_lung_region_bound_single"
