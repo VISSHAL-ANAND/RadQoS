@@ -32,7 +32,7 @@ Updated: 2026-10-29 UTC
 - [ ] Delete the four non-main branch refs after verifying their unique content is present on `main`; branch deletion is not exposed by the GitHub actions available in this session.
 
 ## Publication items not honestly verifiable as complete yet
-- [ ] Verify applicable official NLM reuse terms and mirror terms before publication/redistribution.
+- [x] Review official NLM dataset ReadMe and general terms, plus the mirror dataset card. Document the required NLM attribution/citations and no-sharing instruction; the mirror's `other` metadata is not a clear reuse license, so do not redistribute source images/masks or imply a license grant.
 - [ ] Finish primary-source verification and integrate a complete, balanced related-work section into the manuscript.
 - [ ] Confirm target council/venue and its required template, page limit, and declarations.
 - [ ] Confirm author names, affiliations, corresponding author, and any funding/conflict/ethics statements; do not invent details.
