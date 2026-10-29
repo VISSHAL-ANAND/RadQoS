@@ -298,6 +298,12 @@ The results are valid only within the declared data representation, candidate se
 
 [8] Famatsu123, “Montgomery and Shenzhen Tuberculosis Chest X-rays,” *Hugging Face Datasets*, dataset card. [Online]. Available: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr. Verify dataset-card revision, license metadata, and access date before submission.
 
+[9] S. Candemir et al., “Lung segmentation in chest radiographs using anatomical atlases with nonrigid registration,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 577–590, Feb. 2014, doi: 10.1109/TMI.2013.2290491.
+
+[10] U.S. National Library of Medicine, “NLM-MontgomeryCXRSet ReadMe,” dataset citation and use instructions. [Online]. Available: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/NLM-MontgomeryCXRSet-ReadMe.pdf.
+
+[11] U.S. National Library of Medicine, “National Library of Medicine Terms and Conditions,” last reviewed May 21, 2019. [Online]. Available: https://www.nlm.nih.gov/databases/download/terms_and_conditions.html.
+
 
 ---
 
