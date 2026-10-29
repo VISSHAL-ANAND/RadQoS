@@ -272,7 +272,6 @@ def validate_results(results_dir: Path, lossless_dir: Path | None = None):
 def build_publication_statistics(data):
     qdf, ddf = data["quality"], data["delivery"]
     rows = []
-    rng_seed = SEED
 
     # Continuous paired comparisons: P1 minus B3, paired by radiograph filename.
     b3 = qdf[qdf.method == "B3_mean_ssim_single"].set_index("image")
@@ -280,8 +279,7 @@ def build_publication_statistics(data):
     for metric in ["payload_bytes", "psnr_db", "ssim_mean", "lung_region_ssim_p05"]:
         pair = pd.concat([b3[metric].rename("b3"), p1[metric].rename("p1")], axis=1).dropna()
         diff = (pair["p1"] - pair["b3"]).to_numpy(dtype=float)
-        lo, hi = paired_bootstrap_mean_ci(diff, seed=rng_seed)
-        rng_seed += 1
+        lo, hi = paired_bootstrap_mean_ci(diff, seed=SEED)
         rows.append({
             "comparison": "P1_minus_B3", "profile": "all", "metric": metric,
             "n_pairs": int(len(diff)), "mean_difference": float(diff.mean()),
@@ -303,7 +301,6 @@ def build_publication_statistics(data):
             b = pair["p2"].to_numpy(dtype=int)
             diff = b.astype(float) - a.astype(float)
             lo, hi = paired_bootstrap_mean_ci(diff, seed=rng_seed)
-            rng_seed += 1
             p_value, p2_ones_p1_zeros, p1_ones_p2_zeros = paired_binary_mcnemar_p(a, b)
             rows.append({
                 "comparison": f"P2_minus_P1_{profile}", "profile": profile, "metric": metric,
@@ -327,7 +324,6 @@ def build_publication_statistics(data):
                 b0_values = pair["b0"].to_numpy(dtype=int)
                 diff = b0_values.astype(float) - p1_values.astype(float)
                 lo, hi = paired_bootstrap_mean_ci(diff, seed=rng_seed)
-                rng_seed += 1
                 p_value, b0_ones_p1_zeros, p1_ones_b0_zeros = paired_binary_mcnemar_p(p1_values, b0_values)
                 rows.append({
                     "comparison": f"B0_minus_P1_{profile}", "profile": profile, "metric": metric,
