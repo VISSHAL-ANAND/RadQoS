@@ -8,9 +8,9 @@ Prepare the existing chest-radiograph compression research for publication, pres
 ### Repository inspection
 - Repository: `VISSHAL-ANAND/research-papper`.
 - Active documentation branch: `publication-readiness`.
-- Existing `README.md`, `docs/STATE.md`, and `docs/TASKS.md) were inspected on the branch.
-- No repository-level `AGENTS.md) was present on the inspected branch before this update.
-- The branch already contained analysis/statistical-validation work and is associated with an open draft PR; it has not been merged to `main).
+- Existing `README.md`, `docs/STATE.md`, and `docs/TASKS.md` were inspected on the branch.
+- No repository-level `AGENTS.md` was present on the inspected branch before this update.
+- The branch already contained analysis/statistical-validation work and is associated with an open draft PR; it has not been merged to `main`.
 
 ### Documentation created or updated
 - Added `AGENTS.md` with repository, reproducibility, and research-integrity rules.
@@ -18,7 +18,7 @@ Prepare the existing chest-radiograph compression research for publication, pres
 - Added `docs/DATASET.md` with dataset source, representation discrepancy, attribution, and data-quality checks.
 - Added `docs/EXPERIMENTS.md` with methods, network simulation, outputs, statistics, and acceptance criteria.
 - Added `docs/DECISIONS.md` with recorded decisions and open questions.
-- Added `docs/TESTING.md` with validation levels and acceptance checks.
+- Added `docs/TESTING.md` with unit, codec, dataset, full-run, and statistical validation requirements.
 - Added `docs/PUBLICATION.md` with the IEEE submission-readiness checklist.
 - Updated `README.md` with a documentation index.
 - Updated `docs/STATE.md` and `docs/TASKS.md` to record the documentation baseline.
@@ -35,5 +35,5 @@ Prepare the existing chest-radiograph compression research for publication, pres
 ### Validation status
 - File creation/update operations returned commit SHAs on `publication-readiness`.
 - The documentation content has not yet been independently reconciled against every implementation function and completed output file.
-- No changes were merged into `main).
+- No changes were merged into `main`.
 - Next: verify all newly created files, review implementation details against the protocol, and update the documentation after the primary run status is checked.
