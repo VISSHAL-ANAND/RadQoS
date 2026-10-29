@@ -2,9 +2,10 @@
 
 **Status: author-review manuscript draft. Not a final submission PDF.**
 
-**Author(s): [CONFIRM NAMES]**  
-**Affiliation(s): [CONFIRM INSTITUTION(S)]**  
-**Corresponding author: [CONFIRM EMAIL]**
+**Author:** Visshal A  
+**Affiliation:** Department of Computer Science and Engineering, Karunya Institute of Technology and Sciences (Deemed University), Coimbatore, Tamil Nadu, India  
+**Corresponding author:** visshalsingiri@gmail.com  
+**Funding:** No external funding was declared by the author.
 
 ## Abstract
 Medical-image delivery over constrained networks requires balancing encoded payload, reconstruction quality, and the probability of completing transmission before a deadline. This study evaluates fixed compression baselines, a global structural-similarity-constrained selector, a lung-region-constrained selector, and a custom base-plus-residual representation using 138 Montgomery County chest radiographs in the publicly distributed 8-bit grayscale representation. The benchmark measures actual encoded bytes, peak signal-to-noise ratio (PSNR), global structural similarity (SSIM), a fifth-percentile regional SSIM statistic computed over lung-mask regions, maximum absolute error, and delivery outcomes under three simulated bandwidth profiles with a 20-s deadline. A separate lossless JPEG 2000 baseline verifies exact reconstruction of the normalized 8-bit inputs. The regional selector averaged 208.61 KiB per image, compared with 170.35 KiB for the global-SSIM selector; mean PSNR was 0.28885 dB higher and mean regional SSIM was 0.0036968 higher. The paired mean payload increase was 39,177.93 bytes (95% paired bootstrap confidence interval [26,095.46, 52,839.50]). Under the poor simulated profile, full-delivery miss rates were 24.64% for the regional selector and 14.49% for the global selector; both had 0% misses under the good profile. The custom base-plus-residual representation frequently failed to deliver the complete representation by the deadline. Results are limited to the public 8-bit representation and the stated simulation. Objective image metrics do not establish diagnostic safety, accuracy, or clinical equivalence.
@@ -176,4 +177,4 @@ Corrected analysis run: https://github.com/VISSHAL-ANAND/research-papper/actions
 Corrected analysis unit tests: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40906898568  
 Experimental end report: https://github.com/VISSHAL-ANAND/research-papper/blob/main/docs/EXPERIMENTAL_END_REPORT.md
 
-**Release checks not represented as complete:** confirm author and affiliation details, target venue and official template, institutional/funding declarations, venue-specific PDF compliance, final page-by-page PDF inspection, and the actual output of a similarity checker. No similarity score or PDF compliance certificate is claimed.
+**Release checks not represented as complete:** target venue and official template are intentionally deferred because this is being maintained as a general IEEE-style research draft; confirm any institution- or venue-specific ethics/declaration requirements; generate and inspect the final PDF; and run a genuine similarity checker. Author name, affiliation, corresponding-author email, and the author's statement that no external funding was received have been entered as supplied. No similarity score or PDF compliance certificate is claimed.
