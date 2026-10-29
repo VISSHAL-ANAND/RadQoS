@@ -4,7 +4,7 @@ Last reconciled: 2026-10-29 UTC
 
 ## Project and repository
 - Repository: https://github.com/VISSHAL-ANAND/research-papper
-- Publication-support changes and unique content from all four working branches have been merged into `main` through PRs #1–#4. The branch refs still exist; this connected GitHub toolset does not expose branch deletion.
+- Publication-support changes and unique content from all four working branches have been merged into `main` through PRs #1–#4. A post-merge branch listing shows only `main`; the four working branch refs no longer appear.
 - Research topic: quality-constrained and deadline-aware compression of Montgomery County chest radiographs.
 - Experimental report: [docs/EXPERIMENTAL_END_REPORT.md](EXPERIMENTAL_END_REPORT.md).
 - New complete author-review manuscript draft: [docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md](IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md); it includes the verified results and related-work section but is not a final submission PDF.
@@ -59,4 +59,4 @@ Last reconciled: 2026-10-29 UTC
 4. Update the existing manuscript and reconcile all reported values to the validated outputs.
 5. Generate and inspect the final PDF; it does not yet exist in this work session.
 6. Run a real similarity checker and record its actual score.
-7. Branch content consolidation is complete: publication-readiness, lossless-baseline, provenance-check, and benchmark-pilot unique files are now preserved on `main`. Branch refs still exist and require deletion through GitHub's branch UI or an authorized API/CLI because branch deletion is not available through this session's GitHub actions.
+7. Branch content consolidation is complete: publication-readiness, lossless-baseline, provenance-check, and benchmark-pilot unique files are now preserved on `main`. Post-merge verification now shows only `main` in the branch listing; no old working branch refs appear.
