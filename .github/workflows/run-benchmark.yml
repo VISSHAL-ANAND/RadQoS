@@ -3,10 +3,6 @@ name: Run real-image compression benchmark
 on:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/run-benchmark.yml"
-      - "benchmark_montgomery.py"
-      - "requirements.txt"
   workflow_dispatch:
 
 permissions:
