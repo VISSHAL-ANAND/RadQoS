@@ -8,7 +8,6 @@ import pandas as pd
 import PIL, scipy, skimage, huggingface_hub
 from scipy.stats import wilcoxon
 from PIL import Image, features
-from huggingface_hub import HfApi, hf_hub_download
 import os
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
 
@@ -78,24 +77,21 @@ def decode_residual(base, payload):
     return np.clip(base.astype(np.int16)+residual.reshape(h,w),0,255).astype(np.uint8)
 
 def load_data():
-    repo = "Famatsu123/montgomery-shenzhen-tuberculosis-cxr"
-    api = HfApi()
-    files = set(api.list_repo_files(repo_id=repo, repo_type="dataset"))
-    image_paths = sorted(p for p in files if p.startswith("MontgomerySet/CXR_png/") and p.lower().endswith(".png"))
-    if not image_paths:
-        raise RuntimeError("No Montgomery PNGs found in the Hugging Face repository")
+    root = Path(os.environ.get("DATA_DIR", "data/MontgomerySet"))
+    image_dir = root/"CXR_png"
+    left_dir = root/"ManualMask"/"leftMask"
+    right_dir = root/"ManualMask"/"rightMask"
+    images = sorted(image_dir.glob("*.png"))
+    if not images:
+        raise RuntimeError(f"No Montgomery PNGs found under {image_dir}; confirm official dataset download/unzip step.")
     limit = int(os.environ.get("MAX_IMAGES", "30"))
-    if limit == 0 and len(image_paths) != 138:
-        raise RuntimeError(f"Expected all 138 Montgomery images, found {len(image_paths)}")
-    if limit > 0 and len(image_paths) > limit:
-        # Select a reproducible random subset before inspecting any compression results.
+    if limit > 0 and len(images) > limit:
         sample_rng = np.random.default_rng(SEED)
-        idx = sorted(sample_rng.choice(len(image_paths), size=limit, replace=False).tolist())
-        image_paths = [image_paths[i] for i in idx]
+        idx = sorted(sample_rng.choice(len(images), size=limit, replace=False).tolist())
+        images = [images[i] for i in idx]
     out=[]
-    for image_path in image_paths:
-        filename = image_path.rsplit("/",1)[-1]
-        path = Path(hf_hub_download(repo_id=repo, filename=image_path, repo_type="dataset"))
+    for path in images:
+        filename = path.name
         with Image.open(path) as im:
             mode = im.mode
             arr0 = np.asarray(im)
@@ -107,29 +103,25 @@ def load_data():
             arr = arr0.astype(np.uint8)
             intensity_mapping = "identity_uint8"
         elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
-            # Explicit, fixed full-range mapping for the source's 12-bit samples.
-            # This evaluates 8-bit renditions; it does NOT preserve native 12-bit precision.
+            # Explicit fixed full-range mapping; this is an 8-bit rendition, not native 12-bit preservation.
             arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
             intensity_mapping = "fixed_linear_0_4095_to_0_255"
         else:
             raise RuntimeError(f"Unsupported source range for {filename}: mode={mode}, dtype={arr0.dtype}, min={source_min}, max={source_max}; no undocumented conversion applied.")
         mask = np.zeros_like(arr, dtype=bool)
         found = 0
-        for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
-            mask_path = md + "/" + filename
-            if mask_path in files:
-                mp = Path(hf_hub_download(repo_id=repo, filename=mask_path, repo_type="dataset"))
+        for md in (left_dir, right_dir):
+            mp = md/filename
+            if mp.exists():
                 with Image.open(mp) as mi:
                     ma = np.asarray(mi.convert("L"))
-                if ma.shape != arr.shape: raise RuntimeError(f"Mask shape mismatch for {filename}")
+                if ma.shape != arr.shape:
+                    raise RuntimeError(f"Mask shape mismatch for {filename}: {ma.shape} vs {arr.shape}")
                 mask |= ma > 0
                 found += 1
         if found == 0:
             raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
-        source_file_bytes = path.stat().st_size
-        source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
-        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max,
-                    intensity_mapping, source_file_bytes, source_sha256))
+        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max, intensity_mapping))
     return out
 
 def main():
@@ -283,7 +275,7 @@ def main():
       "software_versions":{"numpy":np.__version__,"pandas":pd.__version__,"Pillow":PIL.__version__,
                            "scipy":scipy.__version__,"scikit_image":skimage.__version__,
                            "huggingface_hub":huggingface_hub.__version__},
-      "dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
+      "dataset_source":"NLM Montgomery County CXR Set, official public download",
       "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
       "n_images":len(data),"expected_full_set_images":138,"max_images_env":int(os.environ.get("MAX_IMAGES","30")),
       "seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
