@@ -7,7 +7,12 @@ on:
       - "benchmark.py"
       - "requirements.txt"
       - ".github/workflows/benchmark.yml"
+      - ".github/workflows/run-benchmark.yml"
   workflow_dispatch:
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
