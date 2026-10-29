@@ -1,32 +1,32 @@
 # Deadline-aware adaptive compression of chest radiographs
 
-This repository evaluates a quality-constrained, deadline-aware compression pipeline on real Montgomery County chest radiographs. The primary experiment is implemented in `benchmark_montgomery.py` and runs in GitHub Actions so no local laptop setup is required.
+This repository evaluates a quality-constrained, deadline-aware compression pipeline on public Montgomery County chest radiographs. The benchmark runs in GitHub Actions so no local laptop setup is required.
 
-## Dataset
+## Dataset and attribution
 
-The benchmark uses the Hugging Face mirror `Famatsu123/montgomery-shenzhen-tuberculosis-cxr`, selecting the Montgomery subset and its manual left/right lung masks. The full Montgomery collection contains 138 frontal chest X-rays (80 normal and 58 with TB-related findings). The original source describes 12-bit grayscale PNGs.
+The workflow downloads the official NLM Montgomery County Chest X-ray Set. It contains 138 frontal chest radiographs (80 normal and 58 with TB-related findings) and manual left/right lung masks. The original dataset paper describes the images as 12-bit grayscale PNGs. The dataset is downloaded at run time and is not committed to this repository.
 
-- Hugging Face mirror: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr
 - Official NLM dataset directory: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/
-- Dataset paper: Jaeger et al., *Two public datasets of chest X-ray images for computer-aided screening of pulmonary diseases*, Quantitative Imaging in Medicine and Surgery, 2014. https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
+- Dataset paper: S. Jaeger et al., “Automatic tuberculosis screening using chest radiographs,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 233–245, Feb. 2014, doi: 10.1109/TMI.2013.2284099.
+- Related dataset description: https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
 
-The Hugging Face mirror reports its license metadata as `other`. Retain attribution and check the original source terms before reuse. Dataset images are downloaded at run time and are not committed to this repository.
+Retain the original attribution and follow the dataset source terms. Do not commit the source images or masks to this repository.
 
 ## Methods
 
 - **B1:** fixed JPEG quality 75.
 - **B2:** fixed JPEG 2000 target ratio 20.
-- **B3:** smallest JPEG 2000 candidate meeting global mean SSIM ≥ 0.95; if none meets the constraint, the highest-mean-SSIM candidate is selected.
-- **P1:** smallest candidate meeting the fifth-percentile local SSIM bound over an 8×8 grid of lung-mask regions (threshold 0.95) and maximum absolute error ≤ 24; if none meets the bound, lossless JPEG 2000 is used.
+- **B3:** candidate with the smallest measured payload meeting global mean SSIM ≥ 0.95; if none meets the constraint, the highest-mean-SSIM candidate is selected and the infeasibility is visible in the results.
+- **P1:** candidate with the smallest measured payload meeting the fifth-percentile local SSIM bound over an 8×8 grid of lung-mask regions (threshold 0.95) and maximum absolute error ≤ 24; if none meets the bound, lossless JPEG 2000 is used.
 - **P2:** deadline-aware JPEG 2000 base plus a separately encoded zlib-compressed signed residual. The residual is decoded and verified to reconstruct the normalized 8-bit reference exactly.
 
-The codec candidate ratios are `[4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120]`. Network profiles are simulated with mean bandwidths of 128 kbps, 512 kbps, and 2 Mbps; throughput varies lognormally, a conservative lower-bound estimate is updated, latency is set to 0.5 s, and the first-stage/full-image deadline is 20 s. These are simulation settings, not measurements of live networks.
+The codec candidate ratios are `[4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120]`. Network profiles are simulated with mean bandwidths of 128 kbps, 512 kbps, and 2 Mbps; throughput varies lognormally, a conservative lower-bound estimate is updated, latency is set to 0.5 s, and the deadline is 20 s. These are simulation settings, not measurements of live networks.
 
-The original source images are preserved in the download cache, but the codec experiment evaluates 8-bit renditions. Integer sources in the range 0–4095 are mapped linearly to 0–255 using a fixed denominator of 4095. The manifest records source mode, dtype, range, dimensions, mask coverage, file size, and SHA-256. This is not a native-12-bit-preserving workflow.
+Native 8-bit images are unchanged. Integer source images with values in 0–4095 are mapped linearly to 0–255 using a fixed denominator of 4095. The manifest records original source mode, dtype, range, intensity mapping, dimensions, source file size, SHA-256, and lung-mask coverage. This experiment evaluates 8-bit renditions; it does not establish preservation of native 12-bit information.
 
 ## Reproduction
 
-The main workflow downloads and evaluates all 138 Montgomery images by setting `MAX_IMAGES=0`. To run a smaller, reproducible pilot, set `MAX_IMAGES=30`; a fixed seed controls sampling. GitHub Actions publishes the result files and logs to the repository and uploads a downloadable artifact.
+The main workflow downloads and evaluates all 138 Montgomery images by setting `MAX_IMAGES=0`. A smaller reproducible pilot can be run by setting `MAX_IMAGES=30`; a fixed seed controls sampling. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
 
 Expected outputs in `results/`:
 - `quality_by_image.csv`: quality/size results for B1, B2, B3, and P1.
@@ -36,7 +36,7 @@ Expected outputs in `results/`:
 - `paired_comparisons.csv`: paired bootstrap confidence intervals and Wilcoxon comparisons.
 - `monotonicity_diagnostics.csv`: empirical codec size/quality monotonicity checks.
 - `dataset_manifest.csv`: source-image provenance and lung-mask metadata.
-- `run_metadata.json`: fixed parameters and limitations.
+- `run_metadata.json`: software versions, fixed parameters, timestamp and limitations.
 - `run.log`: console output and any traceback if a run fails.
 
 ## Interpretation and limitations
