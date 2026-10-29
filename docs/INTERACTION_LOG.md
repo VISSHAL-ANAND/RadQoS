@@ -23,4 +23,5 @@
 - All deadline outcomes are simulated. The experiment does not establish diagnostic safety or clinical performance.
 - The mirror license metadata is `other`; applicable reuse terms still require review.
 - No final submission PDF or similarity-check score exists in this work session.
-- Branch consolidation and deletion have not been completed. Unique branch content must be preserved in `main` before branches are removed.
+- Consolidated branch content: PR #1 publication analysis/docs, PR #2 lossless baseline artifacts, PR #3 provenance audit workflow, and PR #4 pilot workflow were merged into `main`. All four PRs merged successfully.
+- The four non-main branch refs remain present. This session's GitHub action set does not expose branch deletion, so delete those refs in GitHub after checking `main` contains the preserved files.
