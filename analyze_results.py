@@ -310,7 +310,7 @@ def build_publication_statistics(data):
         group = ddf[ddf.profile == profile]
         p1g = group[group.method == "P1_lung_region_bound_single"].set_index("image")
         p2g = group[group.method == "P2_deadline_aware_base_residual"].set_index("image")
-        for metric in ["full_delivery_miss", "quality_bound_met_by_deadline"]:
+        for metric in ["deadline_miss", "full_delivery_miss", "quality_bound_met_by_deadline"]:
             pair = pd.concat([p1g[metric].rename("p1"), p2g[metric].rename("p2")], axis=1).dropna()
             a = pair["p1"].to_numpy(dtype=int)
             b = pair["p2"].to_numpy(dtype=int)
