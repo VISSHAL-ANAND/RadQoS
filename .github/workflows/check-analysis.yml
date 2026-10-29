@@ -1,0 +1,29 @@
+name: Validate publication analysis code
+
+on:
+  push:
+    branches: [publication-readiness]
+    paths:
+      - "analyze_results.py"
+      - "tests/test_analyze_results.py"
+      - ".github/workflows/check-analysis.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install scientific dependencies
+        run: python -m pip install --upgrade pip numpy pandas scipy
+      - name: Compile analysis module
+        run: python -m compileall -q analyze_results.py
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
