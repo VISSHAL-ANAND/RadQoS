@@ -50,11 +50,12 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Mean compression ratio versus raw 8-bit pixels: 5.311806:1.
 - Median encode time in the latest rerun: 0.699541 s (timing is runner-dependent).
 - Simulated full-delivery miss rates: 100% at 128 kbps, 99.2754% at 512 kbps, 26.087% at 2 Mbps.
-- The latest successful rerun is 40885682147: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40885682147. Its CSVs, manifest, metadata, and log are now committed under `lossless-results/` on branch `lossless-baseline`.
+- The latest successful rerun is 40885682147: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40885682147; run code/workflow commit: `4e90cd2f474e30b8152667ab4cda21f4917374fd`. Its CSVs, manifest, metadata, and log are now committed under `lossless-results/` on branch `lossless-baseline`.
 - This is a supplemental standalone baseline, not the completed primary benchmark. The baseline script documents matched sorted image order, seed, profile order, and throughput RNG draw order; the postprocessor independently checks actual per-image/profile bandwidth draws before paired comparisons.
 
 ### Primary full-dataset benchmark
 - Run: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
+- Exact run code commit: `b8ead4566b07cf2130a3f06546392c6c739fa44b`.
 - Last checked: in progress, primary benchmark step running, no artifact yet. Job started 2026-10-29 11:23:27 UTC.
 - Current committed `results/run.log` ends at image 19/138, but that file is not conclusive evidence that the active run stopped there; it may be from an earlier published attempt.
 - Do not cancel or replace this run without checking its latest state. When it concludes or times out, inspect its job logs, artifacts, and published outputs.
