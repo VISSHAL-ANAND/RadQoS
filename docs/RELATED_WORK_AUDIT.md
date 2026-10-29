@@ -62,6 +62,14 @@ Recent literature includes region-aware compression of chest CT, diagnosis-orien
 | Urbaniak (2024) | Review of compressed JPEG/JPEG 2000 images in deep-learning pipelines | Useful map of later studies and downstream effects | Use it to find primary studies; do not cite the review as proof of a specific algorithm's results |
 | Pambrun & Noumeir (2015) | Analysis of SSIM limitations in diagnostic imaging | Supports the construct-validity limitation | Current SSIM thresholds are engineering constraints, not clinical thresholds |
 
+### Required dataset/annotation citations and reuse caution
+The current NLM dataset page asks users to cite both the dataset description and the annotation paper. Because this study uses the manual lung masks, cite both sources:
+- S. Rajaraman, L. R. Folio, J. Dimperio, P. O. Alderson, and S. K. Antani, “Improved Semantic Segmentation of Tuberculosis-Consistent Findings in Chest X-rays Using Augmented Training of Modality-Specific U-Net Models with Weak Localizations,” *Diagnostics*, vol. 11, no. 4, art. 616, 2021. DOI: https://doi.org/10.3390/diagnostics11040616.
+- Official NLM dataset description and citation instructions: https://www.lhncbc.nlm.nih.gov/LHC-publications/pubs/TuberculosisChestXrayDatasets.html
+- Official NLM readme PDF: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/NLM-MontgomeryCXRSet-ReadMe.pdf
+
+The original dataset publication asks users not to share the dataset outside their research group/organization and encourages requests directly to NLM. The project should not re-host or commit the radiographs/masks. Cite the authoritative source, preserve required attribution, and verify the current terms before distributing derived files or source archives. The official page says the source data are de-identified and that use/sharing were reviewed and exempted by the original ethics boards; do not infer that this automatically determines the current authors' local institutional obligations.
+
 ## Appropriate contribution framing
 
 Do not claim a new compression codec, new ROI coding paradigm, new progressive JPEG 2000 method, or clinically safe threshold.
