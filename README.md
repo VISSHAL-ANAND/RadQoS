@@ -4,13 +4,14 @@ This repository evaluates a quality-constrained, deadline-aware compression pipe
 
 ## Dataset and attribution
 
-The workflow downloads the official NLM Montgomery County Chest X-ray Set. It contains 138 frontal chest radiographs (80 normal and 58 with TB-related findings) and manual left/right lung masks. The original dataset paper describes the images as 12-bit grayscale PNGs. The dataset is downloaded at run time and is not committed to this repository.
+The workflow downloads selected files from the public Hugging Face mirror of the Montgomery County chest X-ray set, which preserves the NLM collection and manual lung masks. It contains 138 frontal chest radiographs (80 normal and 58 with TB-related findings) and manual left/right lung masks. The original dataset paper describes the images as 12-bit grayscale PNGs. The dataset is downloaded at run time and is not committed to this repository.
 
+- Hugging Face mirror: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr
 - Official NLM dataset directory: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/
 - Dataset paper: S. Jaeger et al., “Automatic tuberculosis screening using chest radiographs,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 233–245, Feb. 2014, doi: 10.1109/TMI.2013.2284099.
 - Related dataset description: https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
 
-Retain the original attribution and follow the dataset source terms. Do not commit the source images or masks to this repository.
+The Hugging Face mirror lists its licence metadata as `other`; review the dataset card and original NLM source terms, retain attribution, and cite the dataset paper. Do not commit the source images or masks to this repository.
 
 ## Methods
 
@@ -26,7 +27,7 @@ Native 8-bit images are unchanged. Integer source images with values in 0–4095
 
 ## Reproduction
 
-The main workflow downloads and evaluates all 138 Montgomery images by setting `MAX_IMAGES=0`. A smaller reproducible pilot can be run by setting `MAX_IMAGES=30`; a fixed seed controls sampling. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
+The current GitHub Actions workflow runs a reproducible 30-image pilot by default. The full 138-image collection can be evaluated by setting `MAX_IMAGES=0`; a fixed seed controls the random sample. The 30-image pilot is preliminary, not a definitive publication result. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
 
 Expected outputs in `results/`:
 - `quality_by_image.csv`: quality/size results for B1, B2, B3, and P1.
