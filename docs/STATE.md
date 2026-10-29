@@ -50,7 +50,7 @@ Last reconciled: 2026-10-29 UTC
 - No reader study, diagnostic accuracy, clinical safety, or clinical non-inferiority was measured.
 
 ## Remaining publication blockers
-1. Verify dataset reuse terms and attribution.
+1. Dataset terms were reviewed and documented. The mirror's `other` license metadata is not a clear license; do not redistribute images/masks, and contact NLM if intended use is ambiguous.
 2. Finish primary-source literature/reference verification and integrate it into the manuscript.
 3. Confirm the target council/venue, template, page limit, author details, and required declarations.
 4. Update the existing manuscript and reconcile all reported values to the validated outputs.
