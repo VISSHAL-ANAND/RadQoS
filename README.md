@@ -27,7 +27,7 @@ Native 8-bit images are unchanged. Integer source images with values in 0–4095
 
 ## Reproduction
 
-The current GitHub Actions workflow runs a reproducible 30-image pilot by default. The full 138-image collection can be evaluated by setting `MAX_IMAGES=0`; a fixed seed controls the random sample. The 30-image pilot is preliminary, not a definitive publication result. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
+The current GitHub Actions workflow is configured to evaluate all 138 Montgomery images (`MAX_IMAGES=0`) in a cloud runner; it downloads the source images and masks at run time and decodes one image at a time to limit RAM use. For a faster preliminary pilot, set `MAX_IMAGES=30`; a fixed seed controls the random sample. A successful full-set run is still limited to this one dataset and does not establish clinical safety. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
 
 Expected outputs in `results/`:
 - `quality_by_image.csv`: quality/size results for B1, B2, B3, and P1.
@@ -42,4 +42,4 @@ Expected outputs in `results/`:
 
 ## Interpretation and limitations
 
-The set is small and limited to chest radiographs; it does not represent all scanners, populations, modalities, or clinical tasks. PSNR/SSIM do not establish diagnostic safety, and the experiment does not measure downstream diagnostic accuracy. P2 is a custom base-plus-residual representation, not a standards-compliant progressive JPEG 2000 codestream. Network results are simulated. Report only outputs from a completed successful real-image run; do not fill manuscript tables from synthetic tests or assumed values.
+The set is small and limited to chest radiographs; it does not represent all scanners, populations, modalities, or clinical tasks. PSNR/SSIM do not establish diagnostic safety, and the experiment does not measure downstream diagnostic accuracy. P2 is a custom base-plus-residual representation, not a standards-compliant progressive JPEG 2000 codestream. The base selector exhaustively evaluates candidate encodings and prioritizes the regional quality/error constraint among candidates predicted to meet the deadline; actual outcomes are evaluated using simulated bandwidth draws. Network results are simulated. Report only outputs from a completed successful real-image run; do not fill manuscript tables from synthetic tests or assumed values.
