@@ -83,6 +83,8 @@ def load_data():
     if not image_paths:
         raise RuntimeError("No Montgomery PNGs found in the Hugging Face repository")
     limit = int(os.environ.get("MAX_IMAGES", "30"))
+    if limit == 0 and len(image_paths) != 138:
+        raise RuntimeError(f"Expected all 138 Montgomery images, found {len(image_paths)}")
     if limit > 0 and len(image_paths) > limit:
         # Select a reproducible random subset before inspecting any compression results.
         sample_rng = np.random.default_rng(SEED)
@@ -157,15 +159,18 @@ def main():
             lr=np.asarray(Image.open(io.BytesIO(lp)).convert("L"),dtype=np.uint8)
             region_pick={"ratio":1,"payload":lp,"rec":lr,"size":len(lp),"m":metrics(orig,lr,mask)}
         base_methods={
-          "B1_fixed_jpeg":{"size":len(jpeg),"first":len(jpeg),"full":len(jpeg),"m":metrics(orig,jrec,mask)},
-          "B2_fixed_j2k":{"size":fixed["size"],"first":fixed["size"],"full":fixed["size"],"m":fixed["m"]},
-          "B3_mean_ssim_single":{"size":mean_pick["size"],"first":mean_pick["size"],"full":mean_pick["size"],"m":mean_pick["m"]},
-          "P1_lung_region_bound_single":{"size":region_pick["size"],"first":region_pick["size"],"full":region_pick["size"],"m":region_pick["m"]},
+          "B1_fixed_jpeg":{"size":len(jpeg),"first":len(jpeg),"full":len(jpeg),"m":metrics(orig,jrec,mask),"ratio":np.nan},
+          "B2_fixed_j2k":{"size":fixed["size"],"first":fixed["size"],"full":fixed["size"],"m":fixed["m"],"ratio":fixed["ratio"]},
+          "B3_mean_ssim_single":{"size":mean_pick["size"],"first":mean_pick["size"],"full":mean_pick["size"],"m":mean_pick["m"],"ratio":mean_pick["ratio"]},
+          "P1_lung_region_bound_single":{"size":region_pick["size"],"first":region_pick["size"],"full":region_pick["size"],"m":region_pick["m"],"ratio":region_pick["ratio"]},
         }
         for meth,item in base_methods.items():
             quality_rows.append({"image":name,"method":meth,"payload_bytes":item["size"],
                                  "raw_8bit_bytes":int(orig.size),
-                                 "compression_ratio_vs_raw_8bit":float(orig.size/item["size"]),**item["m"]})
+                                 "compression_ratio_vs_raw_8bit":float(orig.size/item["size"]),
+                                 "selected_jpeg2000_ratio":item.get("ratio",np.nan),
+                                 "p1_used_lossless_fallback":bool(meth=="P1_lung_region_bound_single" and not region_feasible),
+                                 **item["m"]})
         for prof,(mean_bps,rel_std,deadline) in PROFILES.items():
             mu,var=estimator[prof]
             b_lo=max(mu-math.sqrt(max(var,0)),0.1*mu)
