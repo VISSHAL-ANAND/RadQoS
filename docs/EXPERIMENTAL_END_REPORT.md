@@ -322,13 +322,15 @@ Primary run outputs:
 - `results/run_metadata.json`
 - `results/run.log`
 
-The supplemental lossless branch retains:
+The supplemental lossless baseline artifacts are now preserved on `main`:
 - `lossless-results/lossless_quality_by_image.csv`
 - `lossless-results/lossless_delivery_by_image_profile.csv`
 - `lossless-results/lossless_manifest.csv`
 - `lossless-results/lossless_delivery_summary.csv`
 - `lossless-results/run_metadata.json`
 - `lossless-results/run.log`
+- `supplemental_lossless_baseline.py`
+- `.github/workflows/lossless-baseline.yml`
 
 The publication-analysis workflow uploads `publication-analysis-report`, containing the QC report, adjusted paired comparisons, and sensitivity-analysis table. Its QC report records 54 checks passed and 0 failed.
 
