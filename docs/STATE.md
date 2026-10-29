@@ -59,6 +59,16 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Do not cancel or replace this run without checking its latest state. When it concludes or times out, inspect its job logs, artifacts, and published outputs.
 - Several earlier main-branch attempts were cancelled during iterative code changes; early attempts also failed. Do not present those as successful full-set experiments.
 
+## Publication-readiness branch work
+- Draft PR: https://github.com/VISSHAL-ANAND/research-papper/pull/1 (open, draft, not merged).
+- Added `analyze_results.py` to validate expected output counts, image/mask keys, constraints, residual-related completion logs, and summary aggregates.
+- Added paired continuous analysis (Wilcoxon + paired bootstrap CI), exact McNemar tests for paired binary outcomes, and Holm adjustment.
+- Added threshold sensitivity analysis over the already encoded candidate table; P1 fallback sizes use the matched lossless baseline. This is exploratory sensitivity analysis, not clinical threshold validation.
+- Added unit tests and a branch-specific GitHub Actions check. First unit-test run 40885534729 completed successfully; later code changes are awaiting the latest validation run.
+- Added an analysis workflow that reads main-branch primary outputs and the lossless-baseline branch, then uploads a report artifact without modifying main.
+- A rerun of the lossless baseline was started to publish its raw CSVs to the `lossless-baseline` branch; run 40885682147 was in progress at the last check.
+- The analysis workflow currently has only produced a pending report because the complete primary result CSVs were not yet present on main.
+
 ## Initial methods/statistics audit
 - Current script uses Wilcoxon signed-rank for some paired binary outcomes; consider exact McNemar tests for binary paired outcomes.
 - P-values across multiple comparisons are unadjusted; apply a prespecified correction such as Holm or label exploratory.
