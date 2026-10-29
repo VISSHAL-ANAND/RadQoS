@@ -5,10 +5,11 @@ This repository contains a reproducible engineering benchmark for deadline-aware
 ## Status and scope
 
 - `benchmark.py` downloads the Montgomery County chest X-ray set from the official U.S. National Library of Medicine (NLM) public source at run time.
-- It evaluates JPEG quality settings and JPEG 2000 target rates when the installed Pillow build supports JPEG 2000.
-- An adaptive selector chooses the smallest encoded candidate satisfying predeclared whole-image and lung-region SSIM thresholds when the deadline byte budget allows it; otherwise it selects the best-scoring candidate that fits, or the smallest candidate if none fits.
+- It evaluates fixed JPEG quality settings and JPEG 2000 target rates when the installed Pillow build supports JPEG 2000.
+- Two adaptive ablations are compared: (1) a global mean-SSIM threshold and (2) a worst-region bound using the fifth percentile of the local SSIM map within the union of the manual lung masks, plus a maximum absolute error limit.
+- If no candidate satisfies the quality rule within the deadline byte budget, the selector chooses the best-scoring candidate that fits; if none fits, it returns the smallest candidate and records a deadline miss.
 - It tests a genuine two-stage representation: a JPEG base image plus a separately encoded lossless PNG residual. The residual size is measured, and a round-trip assertion verifies exact reconstruction of the normalized 8-bit reference.
-- Synthetic tests are software smoke tests only and are not research evidence. No synthetic result is presented as a medical-image result.
+- It computes paired Wilcoxon comparisons, bootstrap confidence intervals for means, Wilson intervals for deadline-miss rates, and diagnostics for observed quality-versus-size monotonicity.
 - No clinical-safety claim is made from PSNR, SSIM, or lung-mask-region metrics.
 
 ## Dataset and attribution
@@ -23,15 +24,18 @@ The benchmark does not commit or redistribute the image files. It records source
 
 ## Reproducibility
 
-The GitHub Actions workflow downloads the dataset, installs dependencies, runs the benchmark, and publishes CSV/JSON outputs as a workflow artifact. It records software versions and all fixed parameters. Network transfer times are calculated simulations at 1, 5, and 20 Mbps with a 10-second deadline and 50-ms fixed latency; they are not live-network measurements.
+The GitHub Actions workflow downloads the dataset, installs dependencies, runs the benchmark, publishes run logs/results to the repository, and uploads a workflow artifact. It records software versions and all fixed parameters. Network transfer times are calculated simulations at 1, 5, and 20 Mbps with a 10-second deadline and 50-ms fixed latency; they are not live-network measurements.
 
 Outputs:
-- `candidate_metrics.csv`: per-image, per-codec candidate sizes and image-quality metrics.
+- `candidate_metrics.csv`: per-image, per-codec candidate sizes, PSNR/SSIM, lung-region SSIM, and maximum absolute error.
 - `per_image_decisions.csv`: method/profile decisions and simulated deadline outcomes.
 - `summary.csv`: aggregate results by method and network profile.
+- `summary_confidence_intervals.csv`: bootstrap confidence intervals for metric means and Wilson intervals for deadline-miss rates.
 - `paired_tests.csv`: exploratory paired Wilcoxon tests against fixed JPEG quality 75 (unadjusted p-values).
+- `monotonicity_diagnostics.csv`: observed quality-versus-size monotonicity checks.
 - `source_manifest.csv`: per-image source metadata and hashes.
 - `run_manifest.json`: run settings, dataset counts, software details, and limitations.
+- `run.log`: console log, including failures if the benchmark does not complete.
 
 ## Interpretation warning
 
