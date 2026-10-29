@@ -25,3 +25,12 @@
 - No final submission PDF or similarity-check score exists in this work session.
 - Consolidated branch content: PR #1 publication analysis/docs, PR #2 lossless baseline artifacts, PR #3 provenance audit workflow, and PR #4 pilot workflow were merged into `main`. All four PRs merged successfully.
 - The four non-main branch refs remain present. This session's GitHub action set does not expose branch deletion, so delete those refs in GitHub after checking `main` contains the preserved files.
+
+
+### 2026-10-29 — Manuscript integration and branch verification
+- Added `docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md` with the verified full-set results, methods, statistics, simulated delivery outcomes, limitations, dataset attribution, and reference list.
+- Added/updated `docs/RELATED_WORK_AUDIT.md` with source-grounded citation roles and limits on novelty claims.
+- Linked both documents from README and reconciled TASKS/STATE.
+- Verified manuscript and citation-audit files exist on `main`.
+- After PRs #1–#4 were merged, the available branch listing returned only `main`; the four working branch refs no longer appear.
+- A final submission PDF is still not present. The document-generation operation remains unavailable in this session; no PDF, similarity score, or venue-compliance certification is claimed.
