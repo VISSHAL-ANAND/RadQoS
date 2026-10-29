@@ -298,7 +298,6 @@ The results are valid only within the declared data representation, candidate se
 
 [8] Famatsu123, “Montgomery and Shenzhen Tuberculosis Chest X-rays,” *Hugging Face Datasets*, dataset card. [Online]. Available: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr. Verify dataset-card revision, license metadata, and access date before submission.
 
-[9] F. Liu et al., “The current role of image compression standards in medical imaging,” *Information*, vol. 8, no. 4, Art. no. 131, 2017, doi: 10.3390/info8040131. This review covers medical image compression standards and related communication mechanisms; use it as background rather than as evidence of the novelty of this specific implementation.
 
 ---
 
