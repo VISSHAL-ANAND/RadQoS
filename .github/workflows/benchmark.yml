@@ -43,6 +43,7 @@ jobs:
           RESULTS_DIR: results
           PYTHONUNBUFFERED: "1"
         run: |
+          rm -rf results
           mkdir -p results
           set -o pipefail
           python benchmark.py 2>&1 | tee results/run.log
@@ -53,11 +54,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
-          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
-            echo "Repository advanced after this run started; skipping publication from a stale source revision."
+          if [ "$(git rev-parse HEAD:benchmark.py)" != "$(git rev-parse origin/main:benchmark.py)" ] || [ "$(git rev-parse HEAD:requirements.txt)" != "$(git rev-parse origin/main:requirements.txt)" ]; then
+            echo "Benchmark code or dependencies changed during this run; skipping stale results."
             exit 0
           fi
-          git add -A results/ || true
+          mkdir -p /tmp/benchmark-results
+          cp -a results/. /tmp/benchmark-results/ 2>/dev/null || true
+          git reset --hard origin/main
+          rm -rf results
+          mkdir -p results
+          cp -a /tmp/benchmark-results/. results/ 2>/dev/null || true
+          git add -A results/
           if git diff --cached --quiet; then
             echo "No run output to publish."
           else
