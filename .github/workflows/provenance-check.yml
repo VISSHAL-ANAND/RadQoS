@@ -1,0 +1,116 @@
+name: Verify Montgomery source provenance
+
+on:
+  push:
+    branches: [provenance-check]
+    paths:
+      - ".github/workflows/provenance-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install image inspection dependency
+        run: python -m pip install --upgrade pip Pillow numpy
+
+      - name: Download from official NLM and Hugging Face and compare bytes
+        run: |
+          python - <<'PY'
+          import csv, hashlib, json, struct, urllib.request
+          from pathlib import Path
+          import numpy as np
+          from PIL import Image
+
+          names = [
+              "MCUCXR_0017_0.png",
+              "MCUCXR_0080_0.png",
+              "MCUCXR_0081_0.png",
+              "MCUCXR_0150_1.png",
+              "MCUCXR_0243_1.png",
+          ]
+          official_root = "https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/CXR_png/"
+          hf_root = "https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr/resolve/main/MontgomerySet/CXR_png/"
+          out = Path("provenance-results")
+          out.mkdir(exist_ok=True)
+
+          def download(url):
+              req = urllib.request.Request(url, headers={"User-Agent": "CXR-Compression-Provenance-Check/1.0"})
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  return response.read(), response.geturl()
+
+          def inspect(blob):
+              if blob[:8] != b"\x89PNG\r\n\x1a\n" or blob[12:16] != b"IHDR":
+                  raise RuntimeError("Downloaded content is not a standard PNG IHDR")
+              width, height = struct.unpack(">II", blob[16:24])
+              bit_depth, color_type = blob[24], blob[25]
+              import io
+              with Image.open(io.BytesIO(blob)) as im:
+                  im.load()
+                  arr = np.asarray(im)
+                  mode = im.mode
+              return {
+                  "width": width, "height": height,
+                  "png_ihdr_bit_depth": bit_depth, "png_color_type": color_type,
+                  "pillow_mode": mode, "numpy_dtype": str(arr.dtype),
+                  "sample_min": int(arr.min()), "sample_max": int(arr.max()),
+              }
+
+          rows = []
+          for name in names:
+              row = {"filename": name}
+              blobs = {}
+              for label, root in [("official_nlm", official_root), ("huggingface", hf_root)]:
+                  blob, resolved = download(root + name + "?download=true")
+                  blobs[label] = blob
+                  details = inspect(blob)
+                  row[f"{label}_url"] = resolved
+                  row[f"{label}_bytes"] = len(blob)
+                  row[f"{label}_sha256"] = hashlib.sha256(blob).hexdigest()
+                  for key, value in details.items():
+                      row[f"{label}_{key}"] = value
+              row["byte_identical"] = blobs["official_nlm"] == blobs["huggingface"]
+              rows.append(row)
+              print(json.dumps(row, sort_keys=True))
+          with (out / "source_comparison.csv").open("w", newline="") as f:
+              writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+              writer.writeheader()
+              writer.writerows(rows)
+          report = {
+              "source_official": official_root,
+              "source_huggingface": hf_root,
+              "n_images_checked": len(rows),
+              "all_byte_identical": all(r["byte_identical"] for r in rows),
+              "all_official_png_bit_depths": sorted({r["official_nlm_png_ihdr_bit_depth"] for r in rows}),
+              "all_hf_png_bit_depths": sorted({r["huggingface_png_ihdr_bit_depth"] for r in rows}),
+              "limitations": [
+                  "Checks only five files, not the complete 138-image collection.",
+                  "Matching hashes prove byte identity for these files, not clinical suitability.",
+                  "PNG header bit depth and Pillow decoded dtype are reported independently."
+              ]
+          }
+          (out / "provenance_summary.json").write_text(json.dumps(report, indent=2))
+          print("\nSUMMARY\n" + json.dumps(report, indent=2))
+          if len(rows) != 5:
+              raise SystemExit("Expected five files")
+          PY
+
+      - name: Upload provenance comparison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: montgomery-source-provenance
+          path: provenance-results/
+          if-no-files-found: error
+          retention-days: 30
