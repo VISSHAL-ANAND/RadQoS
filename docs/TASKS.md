@@ -33,13 +33,16 @@ Updated: 2026-10-29 UTC
 
 ## Publication items not honestly verifiable as complete yet
 - [x] Review official NLM dataset ReadMe and general terms, plus the mirror dataset card. Document the required NLM attribution/citations and no-sharing instruction; the mirror's `other` metadata is not a clear reuse license, so do not redistribute source images/masks or imply a license grant.
-- [ ] Finish primary-source verification and integrate a complete, balanced related-work section into the manuscript.
+- [x] Integrate a focused related-work section and source-grounded citations into `docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md` and add `docs/RELATED_WORK_AUDIT.md`.
+- [ ] Expand the literature search for ROI-based medical compression, task-based/reader-study evaluation, and network-aware medical image delivery before making any novelty claim.
 - [ ] Confirm target council/venue and its required template, page limit, and declarations.
 - [ ] Confirm author names, affiliations, corresponding author, and any funding/conflict/ethics statements; do not invent details.
-- [ ] Update the existing manuscript draft and reconcile every table/figure/number with the verified artifacts.
+- [x] Create `docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md` with the validated full-set values, statistical comparisons, simulation outcomes, limitations, attribution requirements, and references.
+- [ ] Reconcile this Markdown author-review draft with the original DOCX manuscript and target venue template; perform a final independent table/number audit before release.
 - [ ] Generate and inspect the final submission PDF. No final submission PDF has been created in this work session.
 - [ ] Run a real similarity checker and record the tool and actual score; a target below 20% cannot be guaranteed.
-- [ ] Archive final manuscript and evidence artifacts against a fixed source revision.
+- [x] Preserve primary benchmark, analysis, tests, lossless baseline, provenance workflow, pilot workflow, and manuscript/report documentation on `main`.
+- [ ] Archive the final submission files and evidence against a fixed source revision after venue-specific finalization.
 
 ## Release rule
 Do not label the manuscript or PDF submission-ready until the external/user-dependent publication items above are resolved and the final PDF has been inspected. The current experiments do not support clinical-safety or diagnostic-accuracy claims.
