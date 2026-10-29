@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 import numpy as np
 import pandas as pd
-import PIL, scipy, skimage, huggingface_hub
+import PIL, scipy, skimage
 from scipy.stats import wilcoxon
 from PIL import Image, features
 import os
@@ -121,7 +121,10 @@ def load_data():
                 found += 1
         if found == 0:
             raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
-        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max, intensity_mapping))
+        source_file_bytes = path.stat().st_size
+        source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max,
+                    intensity_mapping, source_file_bytes, source_sha256))
     return out
 
 def main():
@@ -274,7 +277,7 @@ def main():
       "python_version":sys.version,"platform":platform.platform(),
       "software_versions":{"numpy":np.__version__,"pandas":pd.__version__,"Pillow":PIL.__version__,
                            "scipy":scipy.__version__,"scikit_image":skimage.__version__,
-                           "huggingface_hub":huggingface_hub.__version__},
+                           },
       "dataset_source":"NLM Montgomery County CXR Set, official public download",
       "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
       "n_images":len(data),"expected_full_set_images":138,"max_images_env":int(os.environ.get("MAX_IMAGES","30")),
@@ -287,7 +290,7 @@ def main():
       "The P2 residual is a separately encoded, losslessly compressed signed-pixel residual, not a progressive JPEG 2000 codestream.",
       "Network conditions are simulated and are not measured real-world traces.",
       "PSNR/SSIM do not establish diagnostic safety.",
-      "The dataset mirror lists its license as 'other'; check source terms and retain attribution."]}
+      "Dataset was downloaded from the official NLM source; retain attribution and cite the dataset paper."]}
     (out/"run_metadata.json").write_text(json.dumps(meta,indent=2))
     print("\nSUMMARY\n"+summary.to_string(index=False),flush=True)
     print(f"Completed: {len(data)} real images. Synthetic inputs were not used.",flush=True)
