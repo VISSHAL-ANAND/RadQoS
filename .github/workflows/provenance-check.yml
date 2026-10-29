@@ -94,7 +94,7 @@ jobs:
           # byte-range reads, without downloading all image payloads again.
           index_blob, _ = download(base_official + "CXR_png/index.html")
           index_text = index_blob.decode("utf-8", errors="replace")
-          image_names = sorted(set(re.findall(r"MCUCXR_[A-Za-z0-9_]+\\.png", index_text)))
+          image_names = sorted(set(re.findall(r"MCUCXR_[A-Za-z0-9_]+\.png", index_text)))
           if len(image_names) != 138:
               raise RuntimeError(f"Expected 138 radiograph links in official NLM index, found {len(image_names)}")
           header_rows = []
@@ -108,7 +108,7 @@ jobs:
                   header = response.read(26)
                   status = getattr(response, "status", None)
                   content_range = response.headers.get("Content-Range", "")
-              if len(header) < 26 or header[:8] != b"\\x89PNG\\r\\n\\x1a\\n" or header[12:16] != b"IHDR":
+              if len(header) < 26 or header[:8] != b"\x89PNG\r\n\x1a\n" or header[12:16] != b"IHDR":
                   raise RuntimeError(f"Invalid or incomplete PNG IHDR header for {filename}; HTTP {status}, bytes={len(header)}")
               width, height = struct.unpack(">II", header[16:24])
               row = {
