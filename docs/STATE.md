@@ -62,11 +62,11 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Several earlier main-branch attempts were cancelled during iterative code changes; early attempts also failed. Do not present those as successful full-set experiments.
 
 ## Publication-readiness branch work
-- Draft PR: https://github.com/VISSHAL-ANAND/research-papper/pull/1 (open, draft, not merged).
+- Draft PR: https://github.com/VISSHAL-ANAND/research-papper/pull/1 (open, draft, mergeable, not merged).
 - Added `analyze_results.py` to validate expected output counts, image/mask keys, constraints, residual-related completion logs, and summary aggregates.
 - Added paired continuous analysis (Wilcoxon + paired bootstrap CI), exact McNemar tests for paired binary outcomes, and Holm adjustment.
 - Added threshold sensitivity analysis over the already encoded candidate table; P1 fallback sizes use the matched lossless baseline. This is exploratory sensitivity analysis, not clinical threshold validation.
-- Added unit tests and a branch-specific GitHub Actions check. Latest test run 40886253948 completed successfully, including the threshold-sensitivity test. An earlier run failed because the test omitted a pandas import; that was corrected and the rerun passed.
+- Added unit tests and a branch-specific GitHub Actions check. Latest test run 40886780510 completed successfully after adding the threshold-sensitivity test, matched lossless comparisons, and P2 first-stage miss testing. Earlier test failures were traced to a missing pandas import and a renamed fallback-count field; both were corrected and reruns passed.
 - Added an analysis workflow that reads main-branch primary outputs and the lossless-baseline branch, then uploads a report artifact without modifying main.
 - A rerun of the lossless baseline completed successfully and published its raw CSVs to the `lossless-baseline` branch; run 40885682147 succeeded.
 - The analysis workflow currently has only produced a pending report because the complete primary result CSVs were not yet present on main.
