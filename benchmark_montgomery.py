@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Cloud benchmark on Montgomery CXR images. Synthetic data are never used here."""
 import io, json, math, struct, zlib, hashlib, platform, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 import numpy as np
@@ -78,21 +79,47 @@ def decode_residual(base, payload):
     return np.clip(base.astype(np.int16)+residual.reshape(h,w),0,255).astype(np.uint8)
 
 def load_data():
-    repo = os.environ.get("DATASET_REPO", "Famatsu123/montgomery-shenzhen-tuberculosis-cxr")
+    repo = "Famatsu123/montgomery-shenzhen-tuberculosis-cxr"
     api = HfApi()
     files = set(api.list_repo_files(repo_id=repo, repo_type="dataset"))
     image_paths = sorted(p for p in files if p.startswith("MontgomerySet/CXR_png/") and p.lower().endswith(".png"))
     if not image_paths:
         raise RuntimeError("No Montgomery PNGs found in the Hugging Face repository")
     limit = int(os.environ.get("MAX_IMAGES", "30"))
+    if limit == 0 and len(image_paths) != 138:
+        raise RuntimeError(f"Expected all 138 Montgomery images, found {len(image_paths)}")
     if limit > 0 and len(image_paths) > limit:
+        # Select a reproducible random subset before inspecting any compression results.
         sample_rng = np.random.default_rng(SEED)
         idx = sorted(sample_rng.choice(len(image_paths), size=limit, replace=False).tolist())
         image_paths = [image_paths[i] for i in idx]
-    out=[]
+
+    # Download the selected images and their manual masks concurrently. This avoids
+    # serially waiting on hundreds of small network requests in the cloud runner.
+    required_paths = set(image_paths)
     for image_path in image_paths:
-        filename = image_path.rsplit("/",1)[-1]
-        path = Path(hf_hub_download(repo_id=repo, filename=image_path, repo_type="dataset"))
+        filename = image_path.rsplit("/", 1)[-1]
+        for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
+            mask_path = md + "/" + filename
+            if mask_path in files:
+                required_paths.add(mask_path)
+    required_paths = sorted(required_paths)
+    downloaded = {}
+    def download_one(remote_path):
+        local_path = hf_hub_download(repo_id=repo, filename=remote_path, repo_type="dataset")
+        return remote_path, Path(local_path)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(download_one, remote_path): remote_path for remote_path in required_paths}
+        for i, future in enumerate(as_completed(futures), 1):
+            remote_path, local_path = future.result()
+            downloaded[remote_path] = local_path
+            if i % 20 == 0 or i == len(futures):
+                print(f"Downloaded {i}/{len(futures)} selected image/mask files", flush=True)
+
+    out = []
+    for image_path in image_paths:
+        filename = image_path.rsplit("/", 1)[-1]
+        path = downloaded[image_path]
         with Image.open(path) as im:
             mode = im.mode
             arr0 = np.asarray(im)
@@ -104,6 +131,8 @@ def load_data():
             arr = arr0.astype(np.uint8)
             intensity_mapping = "identity_uint8"
         elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
+            # Explicit, fixed full-range mapping for the source's 12-bit samples.
+            # This evaluates 8-bit renditions; it does NOT preserve native 12-bit precision.
             arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
             intensity_mapping = "fixed_linear_0_4095_to_0_255"
         else:
@@ -112,8 +141,8 @@ def load_data():
         found = 0
         for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
             mask_path = md + "/" + filename
-            if mask_path in files:
-                mp = Path(hf_hub_download(repo_id=repo, filename=mask_path, repo_type="dataset"))
+            if mask_path in downloaded:
+                mp = downloaded[mask_path]
                 with Image.open(mp) as mi:
                     ma = np.asarray(mi.convert("L"))
                 if ma.shape != arr.shape:
