@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: lossless-baseline-${{ github.ref }}
@@ -43,6 +43,25 @@ jobs:
           mkdir -p lossless-results
           set -o pipefail
           python supplemental_lossless_baseline.py 2>&1 | tee lossless-results/run.log
+
+      - name: Publish baseline outputs to repository branch
+        if: always()
+        run: |
+          mkdir -p /tmp/lossless-results
+          cp -a lossless-results/. /tmp/lossless-results/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin lossless-baseline
+          git reset --hard origin/lossless-baseline
+          mkdir -p lossless-results
+          cp -a /tmp/lossless-results/. lossless-results/ 2>/dev/null || true
+          git add -A lossless-results/
+          if git diff --cached --quiet; then
+            echo "No baseline outputs to publish."
+          else
+            git commit -m "Publish full-set lossless baseline outputs [skip ci]"
+            git push origin HEAD:lossless-baseline
+          fi
 
       - name: Upload baseline result files
         if: always()
