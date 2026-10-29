@@ -1,10 +1,12 @@
-name: Legacy sampled benchmark (manual only)
+name: Run real-image compression benchmark
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   benchmark:
@@ -20,16 +22,37 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
-      - name: Run legacy sampled benchmark
+      - name: Download official NLM Montgomery dataset
+        run: |
+          curl -fL --retry 3 --connect-timeout 30 --max-time 600 \
+            "https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet.zip" \
+            -o MontgomerySet.zip
+          mkdir -p data
+          unzip -q MontgomerySet.zip -d data
+          test -d data/MontgomerySet/CXR_png
+          echo "Image files: $(find data/MontgomerySet/CXR_png -name '*.png' | wc -l)"
+      - name: Run reproducible real-image pilot
         env:
-          HF_HUB_DISABLE_TELEMETRY: "1"
+          DATA_DIR: "data/MontgomerySet"
           MAX_IMAGES: "30"
         run: python benchmark_montgomery.py
       - name: Upload results artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: legacy-sampled-benchmark-results
+          name: compression-benchmark-results
           path: results/
           if-no-files-found: warn
           retention-days: 30
+      - name: Commit result tables back to repository
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/
+          if git diff --cached --quiet; then
+            echo "No result changes to commit."
+          else
+            git commit -m "Add real-image benchmark results [skip ci]"
+            git push
+          fi
