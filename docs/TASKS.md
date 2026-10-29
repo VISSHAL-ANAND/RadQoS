@@ -2,6 +2,17 @@
 
 Updated: 2026-10-29
 
+## Documentation baseline
+- [x] Create project scope and success criteria in `docs/PROJECT.md`.
+- [x] Record dataset provenance, bit-depth discrepancy, attribution, and integrity checks in `docs/DATASET.md`.
+- [x] Record experimental methods, network settings, output contract, and acceptance criteria in `docs/EXPERIMENTS.md`.
+- [x] Record decisions and open questions in `docs/DECISIONS.md`.
+- [x] Record unit, codec, dataset, full-run, and statistical validation in `docs/TESTING.md`.
+- [x] Create IEEE submission checklist in `docs/PUBLICATION.md`.
+- [x] Add repository-level instructions in `AGENTS.md`.
+- [x] Add a README documentation index and interaction log.
+- [ ] Re-read documentation against the implementation and generated outputs before marking the documentation baseline fully reconciled.
+
 ## P0 — Recover and complete experimental evidence
 - [ ] Recheck primary run 40865016332: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
 - [ ] When it finishes, inspect all job steps, full logs, artifacts, and published output files.
@@ -44,4 +55,4 @@ Updated: 2026-10-29
 - [ ] Archive manuscript, source, scripts, logs, CSVs, metadata, figures, and exact code commit for reproducibility.
 
 ## Exit criteria
-Do not call the paper submission-ready until the primary experiment is completed and validated (or the study is explicitly rescoped), every reported value traces to evidence, related work and references are verified, venue rules are met, and the final DOCX/PDF has been inspected.
+Do not call the manuscript submission-ready until the primary experiment is completed and validated (or the study is explicitly rescoped), every reported value traces to evidence, related work and references are verified, venue rules are met, and the final DOCX/PDF has been inspected.
