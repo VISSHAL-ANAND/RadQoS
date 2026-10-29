@@ -2,6 +2,18 @@
 
 This repository evaluates a quality-constrained, deadline-aware compression pipeline on public Montgomery County chest radiographs. The benchmark runs in GitHub Actions so no local laptop setup is required.
 
+## Documentation
+
+- [Project scope and success criteria](docs/PROJECT.md)
+- [Dataset provenance and limitations](docs/DATASET.md)
+- [Experimental protocol and output contract](docs/EXPERIMENTS.md)
+- [Research decisions and open questions](docs/DECISIONS.md)
+- [Testing and validation plan](docs/TESTING.md)
+- [IEEE publication checklist](docs/PUBLICATION.md)
+- [Current project state](docs/STATE.md)
+- [Prioritized publication tasks](docs/TASKS.md)
+- [Interaction log](docs/INTERACTION_LOG.md)
+
 ## Dataset and attribution
 
 The workflow downloads selected files from the public Hugging Face mirror of the Montgomery County chest X-ray set, which preserves the NLM collection and manual lung masks. It contains 138 frontal chest radiographs (80 normal and 58 with TB-related findings) and manual left/right lung masks. The original dataset paper describes the images as 12-bit grayscale PNGs. The dataset is downloaded at run time and is not committed to this repository.
