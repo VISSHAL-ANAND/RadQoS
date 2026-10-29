@@ -393,7 +393,7 @@ def build_threshold_sensitivity(data):
                     (group["max_abs_error"] <= max_error_threshold)
                 ]
                 if len(feasible):
-                    row = feasible.sort_values(["payload_bytes", "lung_region_ssim_p05"], ascending=[True, False]).iloc[0]
+                    row = feasible.sort_values(["payload_bytes"], kind="stable").iloc[0]
                     selected.append({
                         "payload_bytes": float(row["payload_bytes"]),
                         "ssim_mean": float(row["ssim_mean"]),
