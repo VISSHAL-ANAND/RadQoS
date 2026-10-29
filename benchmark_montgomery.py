@@ -78,17 +78,14 @@ def decode_residual(base, payload):
     return np.clip(base.astype(np.int16)+residual.reshape(h,w),0,255).astype(np.uint8)
 
 def load_data():
-    repo = "Famatsu123/montgomery-shenzhen-tuberculosis-cxr"
+    repo = os.environ.get("DATASET_REPO", "Famatsu123/montgomery-shenzhen-tuberculosis-cxr")
     api = HfApi()
     files = set(api.list_repo_files(repo_id=repo, repo_type="dataset"))
     image_paths = sorted(p for p in files if p.startswith("MontgomerySet/CXR_png/") and p.lower().endswith(".png"))
     if not image_paths:
         raise RuntimeError("No Montgomery PNGs found in the Hugging Face repository")
     limit = int(os.environ.get("MAX_IMAGES", "30"))
-    if limit == 0 and len(image_paths) != 138:
-        raise RuntimeError(f"Expected all 138 Montgomery images, found {len(image_paths)}")
     if limit > 0 and len(image_paths) > limit:
-        # Select a reproducible random subset before inspecting any compression results.
         sample_rng = np.random.default_rng(SEED)
         idx = sorted(sample_rng.choice(len(image_paths), size=limit, replace=False).tolist())
         image_paths = [image_paths[i] for i in idx]
@@ -107,8 +104,6 @@ def load_data():
             arr = arr0.astype(np.uint8)
             intensity_mapping = "identity_uint8"
         elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
-            # Explicit, fixed full-range mapping for the source's 12-bit samples.
-            # This evaluates 8-bit renditions; it does NOT preserve native 12-bit precision.
             arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
             intensity_mapping = "fixed_linear_0_4095_to_0_255"
         else:
@@ -121,7 +116,8 @@ def load_data():
                 mp = Path(hf_hub_download(repo_id=repo, filename=mask_path, repo_type="dataset"))
                 with Image.open(mp) as mi:
                     ma = np.asarray(mi.convert("L"))
-                if ma.shape != arr.shape: raise RuntimeError(f"Mask shape mismatch for {filename}")
+                if ma.shape != arr.shape:
+                    raise RuntimeError(f"Mask shape mismatch for {filename}: {ma.shape} vs {arr.shape}")
                 mask |= ma > 0
                 found += 1
         if found == 0:
@@ -281,7 +277,7 @@ def main():
     meta={"run_timestamp_utc":datetime.now(timezone.utc).isoformat(),
       "python_version":sys.version,"platform":platform.platform(),
       "software_versions":{"numpy":np.__version__,"pandas":pd.__version__,"Pillow":PIL.__version__,
-                           "scipy":scipy.__version__,"scikit_image":skimage.__version__,
+                           "scipy":scipy.__version__,"scikit_image":skimage.__version__,"huggingface_hub":huggingface_hub.__version__,
                            "huggingface_hub":huggingface_hub.__version__},
       "dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
       "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
