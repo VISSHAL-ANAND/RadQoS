@@ -70,7 +70,7 @@ class TestThresholdSensitivity(unittest.TestCase):
             (result["max_abs_error_threshold"] == 24)
         ].iloc[0]
         self.assertEqual(p1["lossy_feasible_images"], 1)
-        self.assertEqual(p1["lossy_infeasible_or_fallback_images"], 1)
+        self.assertEqual(p1["lossless_fallback_images"], 1)
         self.assertEqual(p1["n_images"], 2)
         self.assertGreater(p1["mean_payload_bytes"], 0)
 
