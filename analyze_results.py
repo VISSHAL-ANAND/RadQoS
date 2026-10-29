@@ -352,6 +352,8 @@ def main():
                         help="Directory containing the completed primary benchmark outputs")
     parser.add_argument("--output-dir", type=Path, required=True,
                         help="Directory to write the QC report and adjusted paired statistics")
+    parser.add_argument("--lossless-results-dir", type=Path, default=None,
+                        help="Optional directory containing the completed standalone B0 lossless baseline outputs")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
