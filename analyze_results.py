@@ -355,6 +355,14 @@ def main():
 
     data, passed, failed = validate_results(args.results_dir, args.lossless_results_dir)
     timestamp = datetime.now(timezone.utc).isoformat()
+    stats = None
+    if not failed:
+        try:
+            stats = build_publication_statistics(data)
+            stats.to_csv(args.output_dir / "paired_comparisons_adjusted.csv", index=False)
+        except Exception as exc:
+            failed.append(f"Statistical analysis failed: {type(exc).__name__}: {exc}")
+
     report = [
         "# Primary Benchmark Quality-Control Report", "",
         f"Analysis timestamp (UTC): {timestamp}", "",
@@ -365,22 +373,18 @@ def main():
     report.extend([f"- PASS — {item}" for item in passed] or ["- None"])
     report.extend(["", "## Failed checks"])
     report.extend([f"- FAIL — {item}" for item in failed] or ["- None"])
-    if not failed:
-        try:
-            stats = build_publication_statistics(data)
-            stats.to_csv(args.output_dir / "paired_comparisons_adjusted.csv", index=False)
-            report.extend([
-                "", "## Statistical analysis",
-                "- P1 versus B3: paired per-image differences for payload bytes, PSNR, global SSIM, and regional SSIM; two-sided Wilcoxon signed-rank tests.",
-                "- P2 versus P1: paired per-image binary outcomes by network profile; exact two-sided McNemar tests and discordant-pair counts.",
-                f"- Paired bootstrap percentile 95% confidence intervals use {BOOTSTRAP_RESAMPLES} resamples of image-level paired differences, seed {SEED}.",
-                "- Holm adjustment is applied across all comparisons in the generated table (10 primary comparisons, plus 6 B0-versus-P1 comparisons when the validated lossless baseline is supplied).",
-                "- Interpret the P2 quality metric as the reconstruction available by the deadline: if the base arrives but the residual does not, this is base-stage quality, not exact full reconstruction.",
-                "- These comparisons do not establish clinical diagnostic safety; the network is simulated."
-            ])
-        except Exception as exc:
-            failed.append(f"Statistical analysis failed: {type(exc).__name__}: {exc}")
-            report.extend(["", "## Statistical analysis error", f"- {type(exc).__name__}: {exc}"])
+    if stats is not None:
+        report.extend([
+            "", "## Statistical analysis",
+            "- P1 versus B3: paired per-image differences for payload bytes, PSNR, global SSIM, and regional SSIM; two-sided Wilcoxon signed-rank tests.",
+            "- P2 versus P1: paired per-image binary outcomes by network profile; exact two-sided McNemar tests and discordant-pair counts.",
+            "- B0 versus P1: paired per-image binary outcomes by network profile for full-delivery misses and quality-bound satisfaction, using exact McNemar tests.",
+            f"- Paired bootstrap percentile 95% confidence intervals use {BOOTSTRAP_RESAMPLES} resamples of image-level paired differences, seed {SEED}.",
+            f"- Holm adjustment is applied across all {len(stats)} comparisons in the generated table.",
+            "- For P2, quality metrics describe the reconstruction available by the deadline; if the base arrives but the residual does not, they describe base-stage quality, not exact full reconstruction.",
+            "- B0 comparisons are only valid if the quality-control report confirms that the primary and lossless runs used identical per-image/profile throughput draws.",
+            "- These comparisons do not establish clinical diagnostic safety; the network is simulated."
+        ])
     report_path = args.output_dir / "quality_control_report.md"
     report_path.write_text("\n".join(report) + "\n")
     print("\n".join(report))
