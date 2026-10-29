@@ -39,5 +39,39 @@ class TestPairedStatistics(unittest.TestCase):
         with self.assertRaises(ValueError):
             paired_binary_mcnemar_p([0, 2], [1, 0])
 
+class TestThresholdSensitivity(unittest.TestCase):
+    def test_expected_grid_and_fallback_accounting(self):
+        candidates = []
+        rows = [
+            ("img1", 4, 100, 0.98, 0.96, 10),
+            ("img1", 8, 50, 0.95, 0.92, 20),
+            ("img2", 4, 120, 0.97, 0.94, 25),
+            ("img2", 8, 60, 0.94, 0.91, 35),
+        ]
+        for image, ratio, size, global_ssim, regional_ssim, error in rows:
+            candidates.append({
+                "image": image, "ratio": ratio, "payload_bytes": size,
+                "ssim_mean": global_ssim, "lung_region_ssim_p05": regional_ssim,
+                "max_abs_error": error,
+            })
+        lossless = pd.DataFrame([
+            {"image": "img1", "payload_bytes": 200},
+            {"image": "img2", "payload_bytes": 220},
+        ])
+        result = build_threshold_sensitivity({
+            "candidates": pd.DataFrame(candidates),
+            "lossless_quality": lossless,
+        })
+        self.assertEqual(len(result), 17)
+        p1 = result[
+            (result["method"] == "P1_lung_region_bound") &
+            (result["regional_ssim_p05_threshold"] == 0.95) &
+            (result["max_abs_error_threshold"] == 24)
+        ].iloc[0]
+        self.assertEqual(p1["lossy_feasible_images"], 1)
+        self.assertEqual(p1["lossy_infeasible_or_fallback_images"], 1)
+        self.assertEqual(p1["n_images"], 2)
+        self.assertGreater(p1["mean_payload_bytes"], 0)
+
 if __name__ == "__main__":
     unittest.main()
