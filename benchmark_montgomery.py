@@ -202,7 +202,20 @@ def main():
             mu,var=estimator[prof]
             b_lo=max(mu-math.sqrt(max(var,0)),0.1*mu)
             feasible=[c for c in candidates if c["size"]*8/b_lo+LATENCY<=deadline]
-            base=min(feasible,key=lambda c:c["size"]) if feasible else min(candidates,key=lambda c:c["size"])
+            if feasible:
+                # Among candidates predicted to meet the deadline, prefer a candidate
+                # meeting the pre-specified regional quality/error constraint. Within
+                # that pool maximize regional SSIM, then global SSIM, then minimize bytes.
+                constrained=[c for c in feasible if
+                    c["m"]["lung_region_ssim_p05"]>=Q_MIN and c["m"]["max_abs_error"]<=MAX_ERROR]
+                pool=constrained if constrained else feasible
+                base=max(pool,key=lambda c:(c["m"]["lung_region_ssim_p05"],
+                                            c["m"]["ssim_mean"],-c["size"]))
+            else:
+                # If no candidate is predicted to arrive before the deadline, choose
+                # the smallest payload as a best-effort fallback; actual delivery is
+                # still evaluated against the simulated bandwidth draw. 
+                base=min(candidates,key=lambda c:(c["size"],-c["m"]["lung_region_ssim_p05"]))
             resid=residual_bytes(orig,base["rec"])
             residual_reconstruction=decode_residual(base["rec"],resid)
             if not np.array_equal(residual_reconstruction,orig):
@@ -306,8 +319,7 @@ def main():
     meta={"run_timestamp_utc":datetime.now(timezone.utc).isoformat(),
       "python_version":sys.version,"platform":platform.platform(),
       "software_versions":{"numpy":np.__version__,"pandas":pd.__version__,"Pillow":PIL.__version__,
-                           "scipy":scipy.__version__,"scikit_image":skimage.__version__,"huggingface_hub":huggingface_hub.__version__,
-                           "huggingface_hub":huggingface_hub.__version__},
+                           "scipy":scipy.__version__,"scikit_image":skimage.__version__,"huggingface_hub":huggingface_hub.__version__},
       "dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
       "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
       "n_images":len(data),"expected_full_set_images":138,"max_images_env":int(os.environ.get("MAX_IMAGES","30")),
