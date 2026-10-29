@@ -1,6 +1,12 @@
 name: Real-image compression benchmark
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "benchmark_montgomery.py"
+      - "requirements.txt"
+      - ".github/workflows/benchmark.yml"
   workflow_dispatch:
 
 concurrency:
@@ -32,7 +38,7 @@ jobs:
 
       - name: Run real-image benchmark
         env:
-          MAX_IMAGES: "0"
+          MAX_IMAGES: "30"
           HF_HUB_DISABLE_TELEMETRY: "1"
           PYTHONUNBUFFERED: "1"
         run: |
