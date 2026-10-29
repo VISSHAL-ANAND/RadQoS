@@ -16,19 +16,19 @@ Updated: 2026-10-29
 - [ ] Review exact lognormal throughput parameterization and correct/document the approximate variance prior.
 - [ ] Use suitable paired binary-outcome inference (e.g., exact McNemar test) with discordant-pair counts where applicable.
 - [ ] Apply a prespecified multiple-comparison correction such as Holm, or explicitly classify all tests as exploratory.
-- [ ] Verify paired bootstrap CIs are paired by image, with fixed seed and stated resampling unit.
+- [ ] Verify paired bootstrap CIs are paired by image, with fixed seed and stated resampling unit. The new postprocessor uses 2,000 image-level paired resamples with seed 42.
 - [ ] Separate unconditional encoded-image quality, base-stage quality, and quality available by deadline.
 - [ ] Report first-stage and full-delivery misses separately for P2; report base, residual, and total bytes.
 - [ ] Compare B1/B2/B3/P1/P2 against lossless B0 only where input, draw order, and metric definitions align.
 - [ ] Decide whether P2 should remain a main method or be framed as a negative/ablation result based on full-set outcomes.
-- [ ] Consider sensitivity analysis for regional grid size, percentile, SSIM threshold, max-error threshold, and random seed; do not tune on the same result and claim confirmatory evidence without qualification.
+- [ ] Run the implemented candidate-based sensitivity analysis for global SSIM threshold and regional SSIM/max-error thresholds; treat it as descriptive/post-hoc robustness analysis. Grid-size/percentile changes require recomputing metrics from images and remain outstanding.
 
 ## P2 — Literature, provenance, reproducibility
 - [ ] Expand related work with primary research on ROI-based JPEG 2000, medical image compression, JPIP/network-aware transmission, diagnostic compression evaluation, and SSIM limitations.
 - [ ] Verify every citation, DOI, publication year, volume/pages, and claim against primary sources.
 - [ ] Verify original NLM dataset terms and mirror license metadata; retain attribution and do not rehost image files.
 - [ ] Record exact code commit, dataset source/revision, dependency versions, seed, parameters, and run timestamp.
-- [ ] Recompute summaries from per-image CSVs and confirm output files match the README schema.
+- [ ] Recompute summaries from per-image CSVs and confirm output files match the README schema; the new postprocessor performs these checks when the completed results are available.
 - [ ] Generate plots/tables from final validated CSVs, with uncertainty intervals and denominators.
 
 ## P3 — Manuscript and submission
