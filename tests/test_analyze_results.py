@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import pandas as pd
 
 from analyze_results import holm_adjust, paired_bootstrap_mean_ci, paired_binary_mcnemar_p, paired_numeric_test, build_threshold_sensitivity
 
