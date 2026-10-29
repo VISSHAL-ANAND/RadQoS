@@ -179,7 +179,7 @@ def main():
     if not features.check("jpg_2000"): raise RuntimeError("Pillow lacks JPEG2000 support")
     data = load_data()
     rng = np.random.default_rng(SEED)
-    estimator = {k: [v[0], (0.3*v[0])**2] for k,v in PROFILES.items()}
+    estimator = {k: [v[0], (v[1]*v[0])**2] for k,v in PROFILES.items()}
     quality_rows, delivery_rows, manifest_rows, candidate_rows = [], [], [], []
     for ix,record in enumerate(data,1):
         (name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,
@@ -347,6 +347,10 @@ def main():
       "region_percentile":PERCENTILE,"grid":GRID,"max_abs_error":MAX_ERROR,
       "fixed_jpeg_quality":JPEG_Q,"fixed_j2k_ratio":FIXED_J2K,"latency_seconds":LATENCY,
       "profiles":PROFILES,"synthetic":False,
+      "bandwidth_estimator":{"initial_mean_bps":"profile_mean","initial_std_fraction":"profile_rel_std",
+                             "lower_bound_formula":"max(mu - sigma, 0.1 * mu)",
+                             "actual_bandwidth_distribution":"lognormal normalized to configured profile mean",
+                             "ewma_alpha":0.3},
       "notes":["Native 8-bit sources are unchanged. Integer sources with values in 0..4095 are mapped by a fixed linear full-range conversion to 8-bit; results therefore describe 8-bit renditions, not native 12-bit preservation.",
       "PSNR is capped at 99 dB for exact reconstruction in the metric function.",
       "The P2 residual is a separately encoded, losslessly compressed signed-pixel residual, not a progressive JPEG 2000 codestream.",
