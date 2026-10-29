@@ -1,0 +1,26 @@
+# Interaction Log
+
+## 2026-10-29 — Experimental evidence and publication readiness
+
+### Primary benchmark
+- Confirmed successful full-set workflow: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
+- Code commit: `b8ead4566b07cf2130a3f06546392c6c739fa44b`; 138 real images; seed 42; 11 candidate settings; `synthetic=false`.
+- Verified expected output counts, table keys, image/mask coverage, metric ranges, summary recomputation, P1 constraint satisfaction, and successful run completion.
+- Confirmed the standalone lossless baseline reconstructs all 138 normalized 8-bit inputs exactly and uses identical per-image/profile throughput draws to the primary run.
+
+### Statistical analysis
+- Original analysis workflow: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40906476864
+- QC report: 54 checks passed, 0 failed.
+- Used 2,000 paired image-level bootstrap resamples with seed 42, Wilcoxon tests for continuous paired metrics, exact McNemar tests for paired binary outcomes, and Holm correction across 19 comparisons.
+- Corrected the P2 paired binary mean-difference output schema.
+- Re-ran corrected analysis: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40906893245
+- Re-ran analysis unit tests: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40906898568
+- Updated STATE and TASKS to remove stale claims that the schema fix remained pending.
+
+### Report and integrity notes
+- Added `docs/EXPERIMENTAL_END_REPORT.md` with measured results, methods, statistics, limitations, provenance, and references.
+- Public NLM PNG headers indicate 8-bit grayscale across 138 images, while the original paper describes 12-bit. Results are scoped to the public 8-bit representation.
+- All deadline outcomes are simulated. The experiment does not establish diagnostic safety or clinical performance.
+- The mirror license metadata is `other`; applicable reuse terms still require review.
+- No final submission PDF or similarity-check score exists in this work session.
+- Branch consolidation and deletion have not been completed. Unique branch content must be preserved in `main` before branches are removed.
