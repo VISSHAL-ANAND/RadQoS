@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Cloud benchmark on Montgomery CXR images. Synthetic data are never used here."""
-import io, json, math, struct, zlib, hashlib
+import io, json, math, struct, zlib, hashlib, platform, sys
+from datetime import datetime, timezone
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import PIL, scipy, skimage, huggingface_hub
 from scipy.stats import wilcoxon
 from PIL import Image, features
 from huggingface_hub import HfApi, hf_hub_download
@@ -276,7 +278,12 @@ def main():
           "mean_ssim_monotonic_violations":int(np.sum(np.diff(meanq)>1e-9)),
           "region_ssim_monotonic_violations":int(np.sum(np.diff(regionq)>1e-9))})
     pd.DataFrame(mono).to_csv(out/"monotonicity_diagnostics.csv",index=False)
-    meta={"dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
+    meta={"run_timestamp_utc":datetime.now(timezone.utc).isoformat(),
+      "python_version":sys.version,"platform":platform.platform(),
+      "software_versions":{"numpy":np.__version__,"pandas":pd.__version__,"Pillow":PIL.__version__,
+                           "scipy":scipy.__version__,"scikit_image":skimage.__version__,
+                           "huggingface_hub":huggingface_hub.__version__},
+      "dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
       "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
       "n_images":len(data),"expected_full_set_images":138,"max_images_env":int(os.environ.get("MAX_IMAGES","30")),
       "seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
