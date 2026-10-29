@@ -1,0 +1,162 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Downloaded 20/138 radiographs
+Downloaded 40/138 radiographs
+Downloaded 60/138 radiographs
+Downloaded 80/138 radiographs
+Downloaded 100/138 radiographs
+Downloaded 120/138 radiographs
+Downloaded 138/138 radiographs
+[1/138] MCUCXR_0001_0.png: lossless payload=4449.4 KiB, exact=True
+[2/138] MCUCXR_0002_0.png: lossless payload=6286.1 KiB, exact=True
+[3/138] MCUCXR_0003_0.png: lossless payload=4550.2 KiB, exact=True
+[4/138] MCUCXR_0004_0.png: lossless payload=3061.5 KiB, exact=True
+[5/138] MCUCXR_0005_0.png: lossless payload=4003.5 KiB, exact=True
+[6/138] MCUCXR_0006_0.png: lossless payload=4832.5 KiB, exact=True
+[7/138] MCUCXR_0008_0.png: lossless payload=3977.7 KiB, exact=True
+[8/138] MCUCXR_0011_0.png: lossless payload=3668.8 KiB, exact=True
+[9/138] MCUCXR_0013_0.png: lossless payload=5052.4 KiB, exact=True
+[10/138] MCUCXR_0015_0.png: lossless payload=5324.4 KiB, exact=True
+[11/138] MCUCXR_0016_0.png: lossless payload=3309.0 KiB, exact=True
+[12/138] MCUCXR_0017_0.png: lossless payload=2646.1 KiB, exact=True
+[13/138] MCUCXR_0019_0.png: lossless payload=3117.5 KiB, exact=True
+[14/138] MCUCXR_0020_0.png: lossless payload=4187.0 KiB, exact=True
+[15/138] MCUCXR_0021_0.png: lossless payload=2940.8 KiB, exact=True
+[16/138] MCUCXR_0022_0.png: lossless payload=4592.1 KiB, exact=True
+[17/138] MCUCXR_0023_0.png: lossless payload=4036.0 KiB, exact=True
+[18/138] MCUCXR_0024_0.png: lossless payload=3245.9 KiB, exact=True
+[19/138] MCUCXR_0026_0.png: lossless payload=2109.2 KiB, exact=True
+[20/138] MCUCXR_0027_0.png: lossless payload=3688.7 KiB, exact=True
+[21/138] MCUCXR_0028_0.png: lossless payload=2831.9 KiB, exact=True
+[22/138] MCUCXR_0029_0.png: lossless payload=3445.8 KiB, exact=True
+[23/138] MCUCXR_0030_0.png: lossless payload=4416.8 KiB, exact=True
+[24/138] MCUCXR_0031_0.png: lossless payload=5334.1 KiB, exact=True
+[25/138] MCUCXR_0035_0.png: lossless payload=3620.0 KiB, exact=True
+[26/138] MCUCXR_0038_0.png: lossless payload=3787.5 KiB, exact=True
+[27/138] MCUCXR_0040_0.png: lossless payload=4392.9 KiB, exact=True
+[28/138] MCUCXR_0041_0.png: lossless payload=2665.7 KiB, exact=True
+[29/138] MCUCXR_0042_0.png: lossless payload=2359.4 KiB, exact=True
+[30/138] MCUCXR_0043_0.png: lossless payload=4594.2 KiB, exact=True
+[31/138] MCUCXR_0044_0.png: lossless payload=4107.8 KiB, exact=True
+[32/138] MCUCXR_0045_0.png: lossless payload=4410.6 KiB, exact=True
+[33/138] MCUCXR_0046_0.png: lossless payload=3998.3 KiB, exact=True
+[34/138] MCUCXR_0047_0.png: lossless payload=3357.3 KiB, exact=True
+[35/138] MCUCXR_0048_0.png: lossless payload=2587.1 KiB, exact=True
+[36/138] MCUCXR_0049_0.png: lossless payload=2937.6 KiB, exact=True
+[37/138] MCUCXR_0051_0.png: lossless payload=4165.2 KiB, exact=True
+[38/138] MCUCXR_0052_0.png: lossless payload=3483.1 KiB, exact=True
+[39/138] MCUCXR_0053_0.png: lossless payload=3517.4 KiB, exact=True
+[40/138] MCUCXR_0054_0.png: lossless payload=3605.3 KiB, exact=True
+[41/138] MCUCXR_0055_0.png: lossless payload=4142.7 KiB, exact=True
+[42/138] MCUCXR_0056_0.png: lossless payload=2476.9 KiB, exact=True
+[43/138] MCUCXR_0057_0.png: lossless payload=3412.6 KiB, exact=True
+[44/138] MCUCXR_0058_0.png: lossless payload=3226.6 KiB, exact=True
+[45/138] MCUCXR_0059_0.png: lossless payload=3661.7 KiB, exact=True
+[46/138] MCUCXR_0060_0.png: lossless payload=1767.8 KiB, exact=True
+[47/138] MCUCXR_0061_0.png: lossless payload=2649.4 KiB, exact=True
+[48/138] MCUCXR_0062_0.png: lossless payload=3264.7 KiB, exact=True
+[49/138] MCUCXR_0063_0.png: lossless payload=3880.4 KiB, exact=True
+[50/138] MCUCXR_0064_0.png: lossless payload=3583.0 KiB, exact=True
+[51/138] MCUCXR_0068_0.png: lossless payload=3207.0 KiB, exact=True
+[52/138] MCUCXR_0069_0.png: lossless payload=4041.3 KiB, exact=True
+[53/138] MCUCXR_0070_0.png: lossless payload=3333.2 KiB, exact=True
+[54/138] MCUCXR_0071_0.png: lossless payload=3741.4 KiB, exact=True
+[55/138] MCUCXR_0072_0.png: lossless payload=3536.0 KiB, exact=True
+[56/138] MCUCXR_0074_0.png: lossless payload=3425.3 KiB, exact=True
+[57/138] MCUCXR_0075_0.png: lossless payload=3604.9 KiB, exact=True
+[58/138] MCUCXR_0077_0.png: lossless payload=2354.0 KiB, exact=True
+[59/138] MCUCXR_0079_0.png: lossless payload=4849.0 KiB, exact=True
+[60/138] MCUCXR_0080_0.png: lossless payload=2463.9 KiB, exact=True
+[61/138] MCUCXR_0081_0.png: lossless payload=3312.8 KiB, exact=True
+[62/138] MCUCXR_0082_0.png: lossless payload=3666.5 KiB, exact=True
+[63/138] MCUCXR_0083_0.png: lossless payload=3801.6 KiB, exact=True
+[64/138] MCUCXR_0084_0.png: lossless payload=3988.8 KiB, exact=True
+[65/138] MCUCXR_0085_0.png: lossless payload=3796.2 KiB, exact=True
+[66/138] MCUCXR_0086_0.png: lossless payload=3124.1 KiB, exact=True
+[67/138] MCUCXR_0087_0.png: lossless payload=3706.7 KiB, exact=True
+[68/138] MCUCXR_0089_0.png: lossless payload=4033.6 KiB, exact=True
+[69/138] MCUCXR_0090_0.png: lossless payload=4705.4 KiB, exact=True
+[70/138] MCUCXR_0091_0.png: lossless payload=4255.2 KiB, exact=True
+[71/138] MCUCXR_0092_0.png: lossless payload=4202.8 KiB, exact=True
+[72/138] MCUCXR_0094_0.png: lossless payload=3304.4 KiB, exact=True
+[73/138] MCUCXR_0095_0.png: lossless payload=5023.5 KiB, exact=True
+[74/138] MCUCXR_0096_0.png: lossless payload=3455.1 KiB, exact=True
+[75/138] MCUCXR_0097_0.png: lossless payload=3560.2 KiB, exact=True
+[76/138] MCUCXR_0099_0.png: lossless payload=3801.7 KiB, exact=True
+[77/138] MCUCXR_0100_0.png: lossless payload=3140.7 KiB, exact=True
+[78/138] MCUCXR_0101_0.png: lossless payload=3445.4 KiB, exact=True
+[79/138] MCUCXR_0102_0.png: lossless payload=4674.4 KiB, exact=True
+[80/138] MCUCXR_0103_0.png: lossless payload=4210.1 KiB, exact=True
+[81/138] MCUCXR_0104_1.png: lossless payload=3660.9 KiB, exact=True
+[82/138] MCUCXR_0108_1.png: lossless payload=3519.0 KiB, exact=True
+[83/138] MCUCXR_0113_1.png: lossless payload=3663.6 KiB, exact=True
+[84/138] MCUCXR_0117_1.png: lossless payload=3585.0 KiB, exact=True
+[85/138] MCUCXR_0126_1.png: lossless payload=3882.8 KiB, exact=True
+[86/138] MCUCXR_0140_1.png: lossless payload=5799.6 KiB, exact=True
+[87/138] MCUCXR_0141_1.png: lossless payload=4357.2 KiB, exact=True
+[88/138] MCUCXR_0142_1.png: lossless payload=3332.8 KiB, exact=True
+[89/138] MCUCXR_0144_1.png: lossless payload=4322.4 KiB, exact=True
+[90/138] MCUCXR_0150_1.png: lossless payload=4002.0 KiB, exact=True
+[91/138] MCUCXR_0162_1.png: lossless payload=4457.5 KiB, exact=True
+[92/138] MCUCXR_0166_1.png: lossless payload=4116.8 KiB, exact=True
+[93/138] MCUCXR_0170_1.png: lossless payload=4000.7 KiB, exact=True
+[94/138] MCUCXR_0173_1.png: lossless payload=5155.8 KiB, exact=True
+[95/138] MCUCXR_0182_1.png: lossless payload=4258.0 KiB, exact=True
+[96/138] MCUCXR_0188_1.png: lossless payload=3667.8 KiB, exact=True
+[97/138] MCUCXR_0194_1.png: lossless payload=3781.7 KiB, exact=True
+[98/138] MCUCXR_0195_1.png: lossless payload=3574.4 KiB, exact=True
+[99/138] MCUCXR_0196_1.png: lossless payload=3330.1 KiB, exact=True
+[100/138] MCUCXR_0203_1.png: lossless payload=4558.2 KiB, exact=True
+[101/138] MCUCXR_0213_1.png: lossless payload=3500.2 KiB, exact=True
+[102/138] MCUCXR_0218_1.png: lossless payload=3668.3 KiB, exact=True
+[103/138] MCUCXR_0223_1.png: lossless payload=3880.7 KiB, exact=True
+[104/138] MCUCXR_0228_1.png: lossless payload=3892.7 KiB, exact=True
+[105/138] MCUCXR_0243_1.png: lossless payload=4209.0 KiB, exact=True
+[106/138] MCUCXR_0251_1.png: lossless payload=3449.3 KiB, exact=True
+[107/138] MCUCXR_0253_1.png: lossless payload=3740.1 KiB, exact=True
+[108/138] MCUCXR_0254_1.png: lossless payload=3570.0 KiB, exact=True
+[109/138] MCUCXR_0255_1.png: lossless payload=3865.2 KiB, exact=True
+[110/138] MCUCXR_0258_1.png: lossless payload=2144.0 KiB, exact=True
+[111/138] MCUCXR_0264_1.png: lossless payload=3206.7 KiB, exact=True
+[112/138] MCUCXR_0266_1.png: lossless payload=4637.8 KiB, exact=True
+[113/138] MCUCXR_0275_1.png: lossless payload=3520.1 KiB, exact=True
+[114/138] MCUCXR_0282_1.png: lossless payload=3792.8 KiB, exact=True
+[115/138] MCUCXR_0289_1.png: lossless payload=3783.8 KiB, exact=True
+[116/138] MCUCXR_0294_1.png: lossless payload=3707.4 KiB, exact=True
+[117/138] MCUCXR_0301_1.png: lossless payload=4335.2 KiB, exact=True
+[118/138] MCUCXR_0309_1.png: lossless payload=2925.5 KiB, exact=True
+[119/138] MCUCXR_0311_1.png: lossless payload=2557.3 KiB, exact=True
+[120/138] MCUCXR_0313_1.png: lossless payload=3886.4 KiB, exact=True
+[121/138] MCUCXR_0316_1.png: lossless payload=3717.0 KiB, exact=True
+[122/138] MCUCXR_0331_1.png: lossless payload=5173.7 KiB, exact=True
+[123/138] MCUCXR_0334_1.png: lossless payload=3875.9 KiB, exact=True
+[124/138] MCUCXR_0338_1.png: lossless payload=4333.6 KiB, exact=True
+[125/138] MCUCXR_0348_1.png: lossless payload=3897.6 KiB, exact=True
+[126/138] MCUCXR_0350_1.png: lossless payload=5114.7 KiB, exact=True
+[127/138] MCUCXR_0352_1.png: lossless payload=3506.9 KiB, exact=True
+[128/138] MCUCXR_0354_1.png: lossless payload=4219.1 KiB, exact=True
+[129/138] MCUCXR_0362_1.png: lossless payload=4128.8 KiB, exact=True
+[130/138] MCUCXR_0367_1.png: lossless payload=3324.4 KiB, exact=True
+[131/138] MCUCXR_0369_1.png: lossless payload=3614.2 KiB, exact=True
+[132/138] MCUCXR_0372_1.png: lossless payload=3020.2 KiB, exact=True
+[133/138] MCUCXR_0375_1.png: lossless payload=3946.8 KiB, exact=True
+[134/138] MCUCXR_0383_1.png: lossless payload=3029.2 KiB, exact=True
+[135/138] MCUCXR_0387_1.png: lossless payload=4505.5 KiB, exact=True
+[136/138] MCUCXR_0390_1.png: lossless payload=3741.4 KiB, exact=True
+[137/138] MCUCXR_0393_1.png: lossless payload=3220.9 KiB, exact=True
+[138/138] MCUCXR_0399_1.png: lossless payload=3227.6 KiB, exact=True
+
+LOSSLESS DELIVERY SUMMARY
+ profile  n_images  mean_payload_kib  median_payload_kib  first_stage_miss_rate  full_delivery_miss_rate  quality_bound_met_by_deadline_rate  mean_transfer_seconds
+    good       138       3763.943402         3712.185059               0.260870                 0.260870                            0.739130              17.436157
+moderate       138       3763.943402         3712.185059               0.992754                 0.992754                            0.007246              72.076084
+    poor       138       3763.943402         3712.185059               1.000000                 1.000000                            0.000000             304.919285
+QUALITY SUMMARY
+{
+  "n_images": 138,
+  "mean_payload_bytes": 3854278.0434782607,
+  "median_payload_bytes": 3801277.5,
+  "mean_compression_ratio_vs_raw_8bit": 5.31180630724197,
+  "median_encode_seconds": 0.6995414050000051,
+  "all_round_trips_exact": true
+}
+Completed: 138 real images, standalone lossless JPEG 2000 baseline; all round trips exact.
