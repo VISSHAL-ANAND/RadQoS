@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Cloud benchmark on Montgomery CXR images. Synthetic data are never used here."""
-import io, json, math, struct, zlib
+import io, json, math, struct, zlib, hashlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -58,9 +58,22 @@ def metrics(orig, rec, mask):
             "lung_region_ssim_min": float(np.min(vals)), "max_abs_error": int(err.max())}
 
 def residual_bytes(orig, base):
+    """Encode a measured, independently decodable signed-residual payload."""
     r = orig.astype(np.int16)-base.astype(np.int16)
     h,w = r.shape
     return b"RSD1"+struct.pack("<II",h,w)+zlib.compress(r.astype("<i2",copy=False).tobytes(),9)
+
+def decode_residual(base, payload):
+    """Decode the residual payload and reconstruct the normalized 8-bit image."""
+    if len(payload) < 12 or payload[:4] != b"RSD1":
+        raise ValueError("Invalid residual payload header")
+    h,w = struct.unpack("<II", payload[4:12])
+    if base.shape != (h,w):
+        raise ValueError(f"Residual shape {(h,w)} does not match base {base.shape}")
+    residual = np.frombuffer(zlib.decompress(payload[12:]), dtype="<i2")
+    if residual.size != h*w:
+        raise ValueError("Residual payload length does not match declared dimensions")
+    return np.clip(base.astype(np.int16)+residual.reshape(h,w),0,255).astype(np.uint8)
 
 def load_data():
     repo = "Famatsu123/montgomery-shenzhen-tuberculosis-cxr"
@@ -109,7 +122,10 @@ def load_data():
                 found += 1
         if found == 0:
             raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
-        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max, intensity_mapping))
+        source_file_bytes = path.stat().st_size
+        source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
+        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max,
+                    intensity_mapping, source_file_bytes, source_sha256))
     return out
 
 def main():
@@ -118,18 +134,22 @@ def main():
     rng = np.random.default_rng(SEED)
     estimator = {k: [v[0], (0.3*v[0])**2] for k,v in PROFILES.items()}
     quality_rows, delivery_rows, manifest_rows, candidate_rows = [], [], [], []
-    for ix,(name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,intensity_mapping) in enumerate(data,1):
+    for ix,(name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,intensity_mapping,source_file_bytes,source_sha256) in enumerate(data,1):
         candidates=[]
         for ratio in RATIOS:
             payload,rec=encode(orig,"JPEG2000",ratio)
             cm = metrics(orig,rec,mask)
             candidates.append({"ratio":ratio,"payload":payload,"rec":rec,"size":len(payload),"m":cm})
-            candidate_rows.append({"image":name,"ratio":ratio,"payload_bytes":len(payload),**cm})
+            candidate_rows.append({"image":name,"ratio":ratio,"payload_bytes":len(payload),
+                                   "raw_8bit_bytes":int(orig.size),
+                                   "compression_ratio_vs_raw_8bit":float(orig.size/len(payload)),**cm})
         jpeg,jrec=encode(orig,"JPEG",JPEG_Q)
         fixed=min(candidates,key=lambda c:abs(c["ratio"]-FIXED_J2K))
         mean_feasible=[c for c in candidates if c["m"]["ssim_mean"]>=Q_MIN]
         region_feasible=[c for c in candidates if c["m"]["lung_region_ssim_p05"]>=Q_MIN and c["m"]["max_abs_error"]<=MAX_ERROR]
-        mean_pick=min(mean_feasible,key=lambda c:c["size"]) if mean_feasible else min(candidates,key=lambda c:c["size"])
+        # If the mean-SSIM constraint is infeasible, preserve the highest-quality candidate.
+        mean_pick=min(mean_feasible,key=lambda c:c["size"]) if mean_feasible else max(
+            candidates,key=lambda c:(c["m"]["ssim_mean"],-c["size"]))
         if region_feasible:
             region_pick=min(region_feasible,key=lambda c:c["size"])
         else:
@@ -143,13 +163,18 @@ def main():
           "P1_lung_region_bound_single":{"size":region_pick["size"],"first":region_pick["size"],"full":region_pick["size"],"m":region_pick["m"]},
         }
         for meth,item in base_methods.items():
-            quality_rows.append({"image":name,"method":meth,"payload_bytes":item["size"],**item["m"]})
+            quality_rows.append({"image":name,"method":meth,"payload_bytes":item["size"],
+                                 "raw_8bit_bytes":int(orig.size),
+                                 "compression_ratio_vs_raw_8bit":float(orig.size/item["size"]),**item["m"]})
         for prof,(mean_bps,rel_std,deadline) in PROFILES.items():
             mu,var=estimator[prof]
             b_lo=max(mu-math.sqrt(max(var,0)),0.1*mu)
             feasible=[c for c in candidates if c["size"]*8/b_lo+LATENCY<=deadline]
             base=min(feasible,key=lambda c:c["size"]) if feasible else min(candidates,key=lambda c:c["size"])
             resid=residual_bytes(orig,base["rec"])
+            residual_reconstruction=decode_residual(base["rec"],resid)
+            if not np.array_equal(residual_reconstruction,orig):
+                raise RuntimeError(f"Residual round-trip verification failed for {name}")
             p2={"size":len(base["payload"])+len(resid),"first":len(base["payload"]),
                 "full":len(base["payload"])+len(resid),"m":metrics(orig,orig,mask),
                 "base_m":base["m"],"base_ratio":base["ratio"],"residual_bytes":len(resid)}
@@ -186,6 +211,7 @@ def main():
                               "source_min":source_min,"source_max":source_max,
                               "intensity_mapping":intensity_mapping,"benchmark_dtype":str(orig.dtype),
                               "width":orig.shape[1],"height":orig.shape[0],
+                              "source_file_bytes":source_file_bytes,"source_sha256":source_sha256,
                               "lung_mask_files_found":nmasks,"lung_mask_pixel_fraction":float(mask.mean())})
         print(f"[{ix}/{len(data)}] {name}: {orig.shape}, mask files={nmasks}",flush=True)
     out=Path("results"); out.mkdir(exist_ok=True)
@@ -244,8 +270,9 @@ def main():
           "region_ssim_monotonic_violations":int(np.sum(np.diff(regionq)>1e-9))})
     pd.DataFrame(mono).to_csv(out/"monotonicity_diagnostics.csv",index=False)
     meta={"dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
-      "subset":"reproducible random sample from MontgomerySet/CXR_png, with manual lung masks; MAX_IMAGES controls sample size",
-      "n_images":len(data),"seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
+      "subset":"all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
+      "n_images":len(data),"expected_full_set_images":138,"max_images_env":int(os.environ.get("MAX_IMAGES","30")),
+      "seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
       "region_percentile":PERCENTILE,"grid":GRID,"max_abs_error":MAX_ERROR,
       "fixed_jpeg_quality":JPEG_Q,"fixed_j2k_ratio":FIXED_J2K,"latency_seconds":LATENCY,
       "profiles":PROFILES,"synthetic":False,
