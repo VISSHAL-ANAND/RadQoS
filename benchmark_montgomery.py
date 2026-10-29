@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import wilcoxon
 from PIL import Image, features
-from huggingface_hub import snapshot_download
+from huggingface_hub import HfApi, hf_hub_download
+import os
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
 
 RATIOS = [4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120]
@@ -62,39 +63,42 @@ def residual_bytes(orig, base):
     return b"RSD1"+struct.pack("<II",h,w)+zlib.compress(r.astype("<i2",copy=False).tobytes(),9)
 
 def load_data():
-    root = Path(snapshot_download(
-        repo_id="Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
-        repo_type="dataset",
-        allow_patterns=["MontgomerySet/CXR_png/*.png",
-                        "MontgomerySet/ManualMask/leftMask/*.png",
-                        "MontgomerySet/ManualMask/rightMask/*.png"],
-    ))
-    image_dir = root/"MontgomerySet/CXR_png"
-    left_dir = root/"MontgomerySet/ManualMask/leftMask"
-    right_dir = root/"MontgomerySet/ManualMask/rightMask"
-    images = sorted(image_dir.glob("*.png"))
-    if not images: raise RuntimeError(f"No Montgomery PNGs found at {image_dir}")
+    repo = "Famatsu123/montgomery-shenzhen-tuberculosis-cxr"
+    api = HfApi()
+    files = set(api.list_repo_files(repo_id=repo, repo_type="dataset"))
+    image_paths = sorted(p for p in files if p.startswith("MontgomerySet/CXR_png/") and p.lower().endswith(".png"))
+    if not image_paths:
+        raise RuntimeError("No Montgomery PNGs found in the Hugging Face repository")
+    limit = int(os.environ.get("MAX_IMAGES", "30"))
+    if limit > 0 and len(image_paths) > limit:
+        # Select a reproducible random subset before inspecting any compression results.
+        sample_rng = np.random.default_rng(SEED)
+        idx = sorted(sample_rng.choice(len(image_paths), size=limit, replace=False).tolist())
+        image_paths = [image_paths[i] for i in idx]
     out=[]
-    for path in images:
+    for image_path in image_paths:
+        filename = image_path.rsplit("/",1)[-1]
+        path = Path(hf_hub_download(repo_id=repo, filename=image_path, repo_type="dataset"))
         with Image.open(path) as im:
             mode = im.mode
             arr0 = np.asarray(im)
         if arr0.ndim != 2 or arr0.dtype != np.uint8:
-            raise RuntimeError(f"High-bit-depth/non-grayscale source {path.name}: mode={mode}, dtype={arr0.dtype}; refusing undocumented intensity conversion.")
+            raise RuntimeError(f"High-bit-depth/non-grayscale source {filename}: mode={mode}, dtype={arr0.dtype}; refusing undocumented intensity conversion.")
         arr = arr0.astype(np.uint8)
         mask = np.zeros_like(arr, dtype=bool)
         found = 0
-        for md in (left_dir, right_dir):
-            mp = md/path.name
-            if mp.exists():
+        for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
+            mask_path = md + "/" + filename
+            if mask_path in files:
+                mp = Path(hf_hub_download(repo_id=repo, filename=mask_path, repo_type="dataset"))
                 with Image.open(mp) as mi:
                     ma = np.asarray(mi.convert("L"))
-                if ma.shape != arr.shape: raise RuntimeError(f"Mask shape mismatch for {path.name}")
+                if ma.shape != arr.shape: raise RuntimeError(f"Mask shape mismatch for {filename}")
                 mask |= ma > 0
                 found += 1
         if found == 0:
-            raise RuntimeError(f"No lung masks found for {path.name}; refusing unmasked run")
-        out.append((path.name, arr, mask, mode, found))
+            raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
+        out.append((filename, arr, mask, mode, found))
     return out
 
 def main():
@@ -227,7 +231,7 @@ def main():
           "region_ssim_monotonic_violations":int(np.sum(np.diff(regionq)>1e-9))})
     pd.DataFrame(mono).to_csv(out/"monotonicity_diagnostics.csv",index=False)
     meta={"dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
-      "subset":"all available MontgomerySet/CXR_png images with both manual lung masks",
+      "subset":"reproducible random sample from MontgomerySet/CXR_png, with manual lung masks; MAX_IMAGES controls sample size",
       "n_images":len(data),"seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
       "region_percentile":PERCENTILE,"grid":GRID,"max_abs_error":MAX_ERROR,
       "fixed_jpeg_quality":JPEG_Q,"fixed_j2k_ratio":FIXED_J2K,"latency_seconds":LATENCY,
