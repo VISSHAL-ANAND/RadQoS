@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from analyze_results import holm_adjust, paired_bootstrap_mean_ci, paired_binary_mcnemar_p, paired_numeric_test
+from analyze_results import holm_adjust, paired_bootstrap_mean_ci, paired_binary_mcnemar_p, paired_numeric_test, build_threshold_sensitivity
 
 class TestHolmAdjustment(unittest.TestCase):
     def test_known_values(self):
