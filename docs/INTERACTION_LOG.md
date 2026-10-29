@@ -1,39 +1,31 @@
 # Interaction Log
 
-## 2026-10-29 — Publication documentation baseline
+## 2026-10-29 — Experimental evidence reconciliation
 
 ### User goal
-Prepare the existing chest-radiograph compression research for publication, preserve prior work, use the supplied IEEE paper as a visual reference, and ensure the manuscript is based on verified experiments.
+Complete the pending research work in one continuous effort, with the full experimental report based on actual results and without inventing values.
 
-### Repository inspection
-- Repository: `VISSHAL-ANAND/research-papper`.
-- Active documentation branch: `publication-readiness`.
-- Existing `README.md`, `docs/STATE.md`, and `docs/TASKS.md` were inspected on the branch.
-- No repository-level `AGENTS.md` was present on the inspected branch before this update.
-- The branch already contained analysis/statistical-validation work and is associated with an open draft PR; it has not been merged to `main`.
+### Primary benchmark recheck
+- Inspected the primary workflow: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
+- Confirmed success on code commit `b8ead4566b07cf2130a3f06546392c6c739fa44b`.
+- Confirmed run metadata timestamp, software versions, seed, parameters, and `synthetic=false`.
+- Confirmed expected output row counts and matching image sets from the publication-analysis QC workflow.
+- Confirmed 54 QC checks passed and 0 failed, including independent summary recomputation, zero P1 fallback, exact lossless reconstruction, and identical per-image/profile throughput draws between primary and lossless runs.
 
-### Documentation created or updated
-- Added `AGENTS.md` with repository, reproducibility, and research-integrity rules.
-- Added `docs/PROJECT.md` with project scope and exit criteria.
-- Added `docs/DATASET.md` with dataset source, representation discrepancy, attribution, and data-quality checks.
-- Added `docs/EXPERIMENTS.md` with methods, network simulation, outputs, statistics, and acceptance criteria.
-- Added `docs/DECISIONS.md` with recorded decisions and open questions.
-- Added `docs/TESTING.md` with unit, codec, dataset, full-run, and statistical validation requirements.
-- Added `docs/PUBLICATION.md` with the IEEE submission-readiness checklist.
-- Updated `README.md` with a documentation index.
-- Updated `docs/STATE.md` and `docs/TASKS.md` to record the documentation baseline.
+### Statistical analysis
+- Triggered the existing analysis workflow on `publication-readiness` after the completed primary results were available.
+- Workflow: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40906476864
+- Generated adjusted paired comparisons and candidate-based threshold sensitivity.
+- Used 2,000 paired image-level bootstrap resamples with seed 42; Wilcoxon tests for continuous P1/B3 comparisons; exact McNemar tests for paired binary outcomes; Holm adjustment across 19 comparisons.
+- Found an analysis-output schema issue: P2 binary mean differences are stored under a separate column name while the common `mean_difference` column is blank. The numerical differences are present, but normalize the schema before final archival.
 
-### Important retained constraints
-- The primary full-dataset benchmark was not verified complete in the state record inspected for this update.
-- The successful lossless baseline is supplemental and must not be represented as the completed primary benchmark.
-- The dataset provenance audit reports public 8-bit PNGs, despite the original paper's 12-bit description.
-- Network outcomes are simulated.
-- No clinical safety or diagnostic-accuracy claim is supported.
-- The target publication venue and author/declaration details remain unknown.
-- The uploaded example PDF is a visual reference only.
+### Documentation
+- Added `docs/EXPERIMENTAL_END_REPORT.md` with full-set results, statistical results, limitations, references, and publication-readiness checklist.
+- Updated project state and task tracker to replace the stale “primary run in progress” status.
+- No changes were made to primary benchmark outputs; no merge to `main` was performed.
 
-### Validation status
-- File creation/update operations returned commit SHAs on `publication-readiness`.
-- The documentation content has not yet been independently reconciled against every implementation function and completed output file.
-- No changes were merged into `main`.
-- Next: verify all newly created files, review implementation details against the protocol, and update the documentation after the primary run status is checked.
+### Remaining work
+- Normalize statistical output schema and rerun tests/analysis.
+- Complete dataset-terms and literature/reference review.
+- Update existing manuscript draft, confirm venue and author/declaration details, then format and inspect final DOCX/PDF.
+- DOCX/PDF generation and page-by-page inspection have not yet been completed in this conversation.
