@@ -508,6 +508,10 @@ def main():
         ])
     report_path = args.output_dir / "quality_control_report.md"
     report_path.write_text("\n".join(report) + "\n")
+    if stats is not None:
+        print("\nADJUSTED PAIRED COMPARISONS\n" + stats.to_string(index=False))
+    if sensitivity is not None:
+        print("\nTHRESHOLD SENSITIVITY\n" + sensitivity.to_string(index=False))
     print("\n".join(report))
     if failed:
         raise SystemExit(1)
