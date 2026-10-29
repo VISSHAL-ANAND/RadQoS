@@ -39,9 +39,13 @@ OUT = Path(os.environ.get("RESULTS_DIR", "results"))
 JPEG_QUALITIES = [25, 40, 50, 60, 70, 75, 85, 90, 95]
 JP2_RATES = [20, 10, 5, 3, 2, 1]
 QUALITY_THRESHOLD = 0.95
+ROI_PERCENTILE = 5
+MAX_ABS_ERROR_LIMIT = 24
 BANDWIDTHS_MBPS = [1, 5, 20]
 DEADLINE_SECONDS = 10.0
 FIXED_LATENCY_SECONDS = 0.05
+BOOTSTRAP_RESAMPLES = 2000
+BOOTSTRAP_SEED = 20261029
 EXPECTED_IMAGES = 138
 
 
@@ -190,13 +194,25 @@ def encode_decode(ref: np.ndarray, codec: str, parameter: int) -> tuple[bytes, n
 
 
 def measure(ref: np.ndarray, recon: np.ndarray, mask: np.ndarray | None) -> dict:
-    psnr = float(peak_signal_noise_ratio(ref, recon, data_range=255))
-    ssim, ssim_map = structural_similarity(ref, recon, data_range=255, full=True)
-    if mask is None:
-        roi_ssim = float("nan")
+    if np.array_equal(ref, recon):
+        psnr = float("inf")
     else:
-        roi_ssim = float(np.mean(ssim_map[mask]))
-    return {"psnr_db": psnr, "ssim": float(ssim), "lung_roi_ssim": roi_ssim}
+        psnr = float(peak_signal_noise_ratio(ref, recon, data_range=255))
+    ssim, ssim_map = structural_similarity(ref, recon, data_range=255, full=True)
+    max_abs_error = int(np.max(np.abs(ref.astype(np.int16) - recon.astype(np.int16))))
+    if mask is None:
+        roi_mean_ssim = float("nan")
+        roi_p5_ssim = float("nan")
+    else:
+        roi_mean_ssim = float(np.mean(ssim_map[mask]))
+        roi_p5_ssim = float(np.percentile(ssim_map[mask], ROI_PERCENTILE))
+    return {
+        "psnr_db": psnr,
+        "ssim": float(ssim),
+        "lung_roi_ssim": roi_mean_ssim,
+        "lung_roi_ssim_p5": roi_p5_ssim,
+        "max_abs_error": max_abs_error,
+    }
 
 
 def make_residual_payload(ref: np.ndarray, base_recon: np.ndarray) -> bytes:
@@ -222,29 +238,33 @@ def transfer_seconds(nbytes: int, mbps: float) -> float:
     return FIXED_LATENCY_SECONDS + (nbytes * 8.0) / (mbps * 1_000_000.0)
 
 
-def choose_adaptive(candidates: list[dict], byte_budget: int) -> tuple[dict, bool]:
-    feasible = [
-        c for c in candidates
-        if c["size_bytes"] <= byte_budget
-        and c["ssim"] >= QUALITY_THRESHOLD
-        and (math.isnan(c["lung_roi_ssim"]) or c["lung_roi_ssim"] >= QUALITY_THRESHOLD)
-    ]
+def choose_adaptive(candidates: list[dict], byte_budget: int, mode: str) -> tuple[dict, bool]:
+    def quality_passes(candidate: dict) -> bool:
+        if mode == "mean_ssim":
+            return candidate["ssim"] >= QUALITY_THRESHOLD
+        if mode == "worst_region":
+            roi_value = candidate["lung_roi_ssim_p5"]
+            return (
+                not math.isnan(roi_value)
+                and roi_value >= QUALITY_THRESHOLD
+                and candidate["max_abs_error"] <= MAX_ABS_ERROR_LIMIT
+            )
+        raise ValueError(f"Unknown selector mode: {mode}")
+
+    feasible = [c for c in candidates if c["size_bytes"] <= byte_budget and quality_passes(c)]
     if feasible:
-        chosen = min(feasible, key=lambda c: (c["size_bytes"], -c["ssim"]))
-        return chosen, True
+        return min(feasible, key=lambda c: (c["size_bytes"], -c["ssim"])), True
+
     deadline_candidates = [c for c in candidates if c["size_bytes"] <= byte_budget]
     if deadline_candidates:
-        chosen = max(
-            deadline_candidates,
-            key=lambda c: (
-                min(c["ssim"], c["lung_roi_ssim"] if not math.isnan(c["lung_roi_ssim"]) else c["ssim"]),
-                c["ssim"],
-                -c["size_bytes"],
-            ),
-        )
-        return chosen, False
-    # Even the smallest candidate misses the deadline: return the smallest
-    # payload and record the miss rather than pretending it met the deadline.
+        def fallback_score(c: dict) -> tuple:
+            regional = c["lung_roi_ssim_p5"]
+            if math.isnan(regional):
+                regional = c["ssim"]
+            return (min(c["ssim"], regional), c["ssim"], -c["size_bytes"])
+        return max(deadline_candidates, key=fallback_score), False
+
+    # No candidate fits the byte budget. Return the smallest and record the miss.
     return min(candidates, key=lambda c: c["size_bytes"]), False
 
 
@@ -304,28 +324,33 @@ def main() -> None:
         }
         for mbps in BANDWIDTHS_MBPS:
             budget = max(0, int((DEADLINE_SECONDS - FIXED_LATENCY_SECONDS) * mbps * 1_000_000 / 8))
-            chosen, quality_met = choose_adaptive(candidates, budget)
-            for method, candidate in [
-                ("Adaptive_quality_constrained", chosen),
-                ("JPEG_Q50", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 50)),
-                ("JPEG_Q75", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 75)),
-                ("JPEG_Q90", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 90)),
+            mean_choice, mean_quality_met = choose_adaptive(candidates, budget, "mean_ssim")
+            region_choice, region_quality_met = choose_adaptive(candidates, budget, "worst_region")
+            methods = [
+                ("Adaptive_mean_ssim", mean_choice, mean_quality_met),
+                ("Adaptive_worst_region", region_choice, region_quality_met),
+                ("JPEG_Q50", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 50), np.nan),
+                ("JPEG_Q75", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 75), np.nan),
+                ("JPEG_Q90", next(c for c in candidates if c["codec"] == "JPEG" and c["parameter"] == 90), np.nan),
             ] + (
                 [
-                    ("JPEG2000_R10", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 10)),
-                    ("JPEG2000_R5", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 5)),
-                    ("JPEG2000_R2", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 2)),
+                    ("JPEG2000_R10", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 10), np.nan),
+                    ("JPEG2000_R5", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 5), np.nan),
+                    ("JPEG2000_R2", next(c for c in candidates if c["codec"] == "JPEG2000" and c["parameter"] == 2), np.nan),
                 ] if jp2_available else []
-            ):
+            )
+            for method, candidate, quality_met in methods:
                 transfer = transfer_seconds(int(candidate["size_bytes"]), mbps)
                 decision_rows.append({
                     "image": path.name, "method": method, "bandwidth_mbps": mbps,
                     "deadline_seconds": DEADLINE_SECONDS, "bytes": int(candidate["size_bytes"]),
                     "transfer_seconds_simulated": transfer,
                     "deadline_met": bool(transfer <= DEADLINE_SECONDS),
-                    "quality_constraints_met_by_adaptive_selector": quality_met if method == "Adaptive_quality_constrained" else np.nan,
+                    "quality_constraints_met_by_adaptive_selector": quality_met,
                     "psnr_db": candidate["psnr_db"], "ssim": candidate["ssim"],
                     "lung_roi_ssim": candidate["lung_roi_ssim"],
+                    "lung_roi_ssim_p5": candidate["lung_roi_ssim_p5"],
+                    "max_abs_error": candidate["max_abs_error"],
                     "codec": candidate["codec"], "parameter": candidate["parameter"],
                 })
             two_stage.update({
@@ -341,7 +366,9 @@ def main() -> None:
                     "deadline_met": transfer_seconds(len(base_payload), mbps) <= DEADLINE_SECONDS,
                     "quality_constraints_met_by_adaptive_selector": np.nan,
                     "psnr_db": base_metrics["psnr_db"], "ssim": base_metrics["ssim"],
-                    "lung_roi_ssim": base_metrics["lung_roi_ssim"], "codec": "JPEG", "parameter": 35,
+                    "lung_roi_ssim": base_metrics["lung_roi_ssim"],
+                    "lung_roi_ssim_p5": base_metrics["lung_roi_ssim_p5"],
+                    "max_abs_error": base_metrics["max_abs_error"], "codec": "JPEG", "parameter": 35,
                 },
                 {
                     "image": path.name, "method": "Two_stage_base_plus_residual", "bandwidth_mbps": mbps,
@@ -350,14 +377,12 @@ def main() -> None:
                     "deadline_met": transfer_seconds(len(base_payload) + len(residual_payload), mbps) <= DEADLINE_SECONDS,
                     "quality_constraints_met_by_adaptive_selector": np.nan,
                     "psnr_db": full_metrics["psnr_db"], "ssim": full_metrics["ssim"],
-                    "lung_roi_ssim": full_metrics["lung_roi_ssim"], "codec": "JPEG+lossless-residual-PNG", "parameter": 35,
+                    "lung_roi_ssim": full_metrics["lung_roi_ssim"],
+                    "lung_roi_ssim_p5": full_metrics["lung_roi_ssim_p5"],
+                    "max_abs_error": full_metrics["max_abs_error"],
+                    "codec": "JPEG+lossless-residual-PNG", "parameter": 35,
                 },
             ])
-        paired.append({
-            "image": path.name,
-            "adaptive_ssim_5mbps": next(r["ssim"] for r in decision_rows[-(len(BANDWIDTHS_MBPS) * (6 if jp2_available else 4) + 6):]
-                                         if r["image"] == path.name and r["method"] == "Adaptive_quality_constrained" and r["bandwidth_mbps"] == 5),
-        })
         print(f"[{index}/{len(image_paths)}] {path.name} complete; JP2={'yes' if jp2_available else 'no'}", flush=True)
 
     candidates_df = pd.DataFrame(candidate_rows)
@@ -377,35 +402,101 @@ def main() -> None:
             median_ssim=("ssim", "median"),
             mean_psnr_db=("psnr_db", "mean"),
             mean_lung_roi_ssim=("lung_roi_ssim", "mean"),
+            mean_lung_roi_ssim_p5=("lung_roi_ssim_p5", "mean"),
+            mean_max_abs_error=("max_abs_error", "mean"),
             deadline_miss_rate=("deadline_met", lambda x: float(1.0 - x.mean())),
         )
         .reset_index()
     )
-    summary.to_csv(OUT / "summary.csv", index=False)
 
-    # Paired, image-level Wilcoxon tests compare the adaptive method with fixed JPEG-Q75.
+    # Deterministic bootstrap confidence intervals for means; Wilson interval for miss rate.
+    def bootstrap_ci(values, seed_offset=0):
+        arr = np.asarray(values, dtype=float)
+        arr = arr[np.isfinite(arr)]
+        if len(arr) == 0:
+            return float("nan"), float("nan")
+        if len(arr) == 1:
+            return float(arr[0]), float(arr[0])
+        rng = np.random.default_rng(BOOTSTRAP_SEED + seed_offset)
+        sampled = rng.choice(arr, size=(BOOTSTRAP_RESAMPLES, len(arr)), replace=True).mean(axis=1)
+        return float(np.percentile(sampled, 2.5)), float(np.percentile(sampled, 97.5))
+
+    def wilson_interval(successes, n, z=1.959963984540054):
+        if n == 0:
+            return float("nan"), float("nan")
+        p = successes / n
+        denom = 1 + z*z/n
+        center = (p + z*z/(2*n)) / denom
+        half = z * math.sqrt((p*(1-p)/n) + z*z/(4*n*n)) / denom
+        return max(0.0, center-half), min(1.0, center+half)
+
+    ci_rows = []
+    for row_index, row in summary.iterrows():
+        group = decisions_df[
+            (decisions_df["bandwidth_mbps"] == row["bandwidth_mbps"])
+            & (decisions_df["method"] == row["method"])
+        ]
+        for metric in ("bytes", "ssim", "psnr_db", "lung_roi_ssim_p5", "max_abs_error"):
+            values = group[metric].to_numpy(dtype=float)
+            low, high = bootstrap_ci(values, seed_offset=int(row_index) * 11 + len(metric))
+            ci_rows.append({
+                "bandwidth_mbps": row["bandwidth_mbps"], "method": row["method"],
+                "metric": metric, "mean": float(np.nanmean(values)) if np.isfinite(values).any() else float("inf"),
+                "ci95_low": low, "ci95_high": high, "n": int(np.isfinite(values).sum()),
+                "interval_method": "percentile bootstrap, 2000 resamples; non-finite values excluded",
+            })
+        n = int(group["deadline_met"].notna().sum())
+        misses = int((~group["deadline_met"].astype(bool)).sum())
+        lo, hi = wilson_interval(misses, n)
+        ci_rows.append({
+            "bandwidth_mbps": row["bandwidth_mbps"], "method": row["method"],
+            "metric": "deadline_miss_rate", "mean": misses / n if n else float("nan"),
+            "ci95_low": lo, "ci95_high": hi, "n": n,
+            "interval_method": "Wilson score interval",
+        })
+    summary.to_csv(OUT / "summary.csv", index=False)
+    pd.DataFrame(ci_rows).to_csv(OUT / "summary_confidence_intervals.csv", index=False)
+
+    # Check empirical monotonicity of quality with increasing encoded size.
+    mono_rows = []
+    for (image, codec), group in candidates_df.groupby(["image", "codec"]):
+        ordered = group.sort_values("size_bytes")
+        ssim_values = ordered["ssim"].to_numpy(dtype=float)
+        roi_values = ordered["lung_roi_ssim_p5"].to_numpy(dtype=float)
+        mono_rows.append({
+            "image": image, "codec": codec, "candidate_count": len(group),
+            "ssim_monotonicity_violations": int(np.sum(np.diff(ssim_values) < -1e-6)),
+            "roi_p5_monotonicity_violations": int(np.sum(np.diff(roi_values[np.isfinite(roi_values)]) < -1e-6)),
+            "note": "Candidates sorted by measured file size; violations count adjacent quality decreases as size increases.",
+        })
+    pd.DataFrame(mono_rows).to_csv(OUT / "monotonicity_diagnostics.csv", index=False)
+
+    # Paired, image-level Wilcoxon tests compare each adaptive selector with fixed JPEG-Q75.
     test_rows = []
     for mbps in BANDWIDTHS_MBPS:
         part = decisions_df[decisions_df["bandwidth_mbps"] == mbps]
-        a = part[part["method"] == "Adaptive_quality_constrained"].set_index("image")
-        b = part[part["method"] == "JPEG_Q75"].set_index("image")
-        for metric in ("ssim", "bytes", "psnr_db"):
-            merged = a[[metric]].join(b[[metric]], lsuffix="_adaptive", rsuffix="_jpeg_q75", how="inner").dropna()
-            diffs = merged[f"{metric}_adaptive"] - merged[f"{metric}_jpeg_q75"]
-            p_value = float("nan")
-            try:
-                from scipy.stats import wilcoxon
-                if len(diffs) and not np.allclose(diffs.to_numpy(), 0):
-                    p_value = float(wilcoxon(diffs).pvalue)
-            except Exception:
-                pass
-            test_rows.append({
-                "bandwidth_mbps": mbps, "metric": metric, "n_pairs": int(len(diffs)),
-                "mean_paired_difference_adaptive_minus_jpeg_q75": float(diffs.mean()) if len(diffs) else float("nan"),
-                "median_paired_difference": float(diffs.median()) if len(diffs) else float("nan"),
-                "wilcoxon_p_value_unadjusted": p_value,
-                "note": "Exploratory paired comparison; p-values unadjusted across metrics/profiles.",
-            })
+        baseline = part[part["method"] == "JPEG_Q75"].set_index("image")
+        for adaptive_method in ("Adaptive_mean_ssim", "Adaptive_worst_region"):
+            adaptive = part[part["method"] == adaptive_method].set_index("image")
+            for metric in ("ssim", "bytes", "psnr_db"):
+                merged = adaptive[[metric]].join(baseline[[metric]], lsuffix="_adaptive", rsuffix="_jpeg_q75", how="inner").dropna()
+                diffs = merged[f"{metric}_adaptive"] - merged[f"{metric}_jpeg_q75"]
+                p_value = float("nan")
+                try:
+                    from scipy.stats import wilcoxon
+                    finite = diffs[np.isfinite(diffs)]
+                    if len(finite) and not np.allclose(finite.to_numpy(), 0):
+                        p_value = float(wilcoxon(finite).pvalue)
+                except Exception:
+                    pass
+                test_rows.append({
+                    "bandwidth_mbps": mbps, "adaptive_method": adaptive_method, "metric": metric,
+                    "n_pairs": int(len(diffs)),
+                    "mean_paired_difference_adaptive_minus_jpeg_q75": float(diffs.mean()) if len(diffs) else float("nan"),
+                    "median_paired_difference": float(diffs.median()) if len(diffs) else float("nan"),
+                    "wilcoxon_p_value_unadjusted": p_value,
+                    "note": "Exploratory paired comparison; p-values unadjusted across metrics/profiles.",
+                })
     pd.DataFrame(test_rows).to_csv(OUT / "paired_tests.csv", index=False)
 
     manifest = {
@@ -423,11 +514,20 @@ def main() -> None:
         "normalization": "8-bit normalized copy; original source min/max/mode and fixed denominator are recorded per image.",
         "candidate_parameters": {"jpeg_quality": JPEG_QUALITIES, "jpeg2000_target_rates": JP2_RATES if jp2_available else []},
         "adaptive_quality_threshold": QUALITY_THRESHOLD,
+        "worst_region_percentile": ROI_PERCENTILE,
+        "maximum_absolute_error_limit": MAX_ABS_ERROR_LIMIT,
+        "bootstrap_resamples": BOOTSTRAP_RESAMPLES,
+        "bootstrap_seed": BOOTSTRAP_SEED,
         "bandwidth_profiles_mbps": BANDWIDTHS_MBPS,
         "deadline_seconds": DEADLINE_SECONDS,
         "fixed_latency_seconds": FIXED_LATENCY_SECONDS,
         "network_note": "Transfer times are mathematical simulations, not live network measurements.",
         "two_stage_note": "Base JPEG and lossless uint16 PNG residual are separate measured payloads; residual round-trip exactness is asserted.",
+        "adaptive_methods": {
+            "Adaptive_mean_ssim": "Smallest candidate meeting global SSIM >= 0.95 within the deadline byte budget.",
+            "Adaptive_worst_region": "Smallest candidate meeting 5th-percentile SSIM-map value within the lung-mask union >= 0.95 and max absolute error <= 24 within the deadline byte budget.",
+            "fallback": "If no quality-feasible candidate fits, choose the best-scoring candidate that fits; if none fits, choose the smallest and record a deadline miss.",
+        },
         "clinical_safety_note": "PSNR/SSIM and lung-mask ROI metrics do not establish diagnostic safety.",
         "elapsed_seconds": round(time.time() - start, 2),
     }
