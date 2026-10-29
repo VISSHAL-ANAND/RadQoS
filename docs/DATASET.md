@@ -28,7 +28,7 @@ The primary workflow downloads the selected image/mask files at run time. Do not
 
 ## Licensing and attribution
 
-The mirror lists its license metadata as `other`. This is unresolved. Before submission or redistribution, review the mirror dataset card and original NLM source terms, retain attribution, and do not assume a license permission that has not been verified.
+The mirror lists its license metadata as `other`, which is not a clear reuse license. The official NLM dataset ReadMe states: (1) do not share the dataset outside the research group/organization, but forward new dataset requests to NLM; and (2) publications resulting from use should attribute the source (National Library of Medicine, National Institutes of Health, Bethesda, MD, USA) and cite both the tuberculosis-screening paper by Jaeger et al. (2014) and the lung-segmentation paper by Candemir et al. (2014). NLM's general download terms also request the conspicuous acknowledgment “Courtesy of the U.S. National Library of Medicine” and prohibit implying NLM endorsement. The manuscript may report analysis results without redistributing the images, but do not upload or share the source images/masks; if any intended use is ambiguous, contact NLM before submission. Cite the original source and mask publications, preserve attribution, and do not claim a license grant from the mirror's `other` metadata.
 
 ## Data-quality checks required for a full run
 
