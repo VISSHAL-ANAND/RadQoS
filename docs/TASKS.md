@@ -29,7 +29,7 @@ Updated: 2026-10-29 UTC
 - [x] Merge standalone lossless baseline code, workflow, and measured CSV/log/metadata artifacts into `main` (PR #2).
 - [x] Merge dataset provenance audit workflow into `main` (PR #3).
 - [x] Merge isolated five-image pilot workflow into `main` (PR #4).
-- [ ] Delete the four non-main branch refs after verifying their unique content is present on `main`; branch deletion is not exposed by the GitHub actions available in this session.
+- [x] Verify branch listing after the four merges: only `main` is listed; the four working branch refs no longer appear.
 
 ## Publication items not honestly verifiable as complete yet
 - [x] Review official NLM dataset ReadMe and general terms, plus the mirror dataset card. Document the required NLM attribution/citations and no-sharing instruction; the mirror's `other` metadata is not a clear reuse license, so do not redistribute source images/masks or imply a license grant.
