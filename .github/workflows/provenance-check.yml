@@ -12,7 +12,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -25,10 +25,10 @@ jobs:
       - name: Install image inspection dependency
         run: python -m pip install --upgrade pip Pillow numpy
 
-      - name: Download from official NLM and Hugging Face and compare bytes
+      - name: Compare official NLM and Hugging Face image and mask bytes
         run: |
           python - <<'PY'
-          import csv, hashlib, json, struct, urllib.request
+          import csv, hashlib, json, struct, urllib.request, io
           from pathlib import Path
           import numpy as np
           from PIL import Image
@@ -40,8 +40,10 @@ jobs:
               "MCUCXR_0150_1.png",
               "MCUCXR_0243_1.png",
           ]
-          official_root = "https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/CXR_png/"
-          hf_root = "https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr/resolve/main/MontgomerySet/CXR_png/"
+          base_official = "https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/"
+          base_hf = "https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr/resolve/main/MontgomerySet/"
+          objects = [(name, "CXR_png") for name in names]
+          objects += [(name, f"ManualMask/{side}Mask") for name in names for side in ("left", "right")]
           out = Path("provenance-results")
           out.mkdir(exist_ok=True)
 
@@ -55,7 +57,6 @@ jobs:
                   raise RuntimeError("Downloaded content is not a standard PNG IHDR")
               width, height = struct.unpack(">II", blob[16:24])
               bit_depth, color_type = blob[24], blob[25]
-              import io
               with Image.open(io.BytesIO(blob)) as im:
                   im.load()
                   arr = np.asarray(im)
@@ -65,14 +66,15 @@ jobs:
                   "png_ihdr_bit_depth": bit_depth, "png_color_type": color_type,
                   "pillow_mode": mode, "numpy_dtype": str(arr.dtype),
                   "sample_min": int(arr.min()), "sample_max": int(arr.max()),
+                  "n_unique_sample_values": int(np.unique(arr).size),
               }
 
           rows = []
-          for name in names:
-              row = {"filename": name}
+          for name, rel_dir in objects:
+              row = {"filename": name, "object_type": "image" if rel_dir == "CXR_png" else rel_dir}
               blobs = {}
-              for label, root in [("official_nlm", official_root), ("huggingface", hf_root)]:
-                  blob, resolved = download(root + name + "?download=true")
+              for label, root in [("official_nlm", base_official), ("huggingface", base_hf)]:
+                  blob, resolved = download(root + rel_dir + "/" + name + "?download=true")
                   blobs[label] = blob
                   details = inspect(blob)
                   row[f"{label}_url"] = resolved
@@ -82,28 +84,33 @@ jobs:
                       row[f"{label}_{key}"] = value
               row["byte_identical"] = blobs["official_nlm"] == blobs["huggingface"]
               rows.append(row)
-              print(json.dumps(row, sort_keys=True))
+              print(json.dumps({k:v for k,v in row.items() if not k.endswith("_url")}, sort_keys=True))
           with (out / "source_comparison.csv").open("w", newline="") as f:
               writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
               writer.writeheader()
               writer.writerows(rows)
+          images = [r for r in rows if r["object_type"] == "image"]
+          masks = [r for r in rows if r["object_type"] != "image"]
           report = {
-              "source_official": official_root,
-              "source_huggingface": hf_root,
-              "n_images_checked": len(rows),
-              "all_byte_identical": all(r["byte_identical"] for r in rows),
-              "all_official_png_bit_depths": sorted({r["official_nlm_png_ihdr_bit_depth"] for r in rows}),
-              "all_hf_png_bit_depths": sorted({r["huggingface_png_ihdr_bit_depth"] for r in rows}),
+              "n_images_checked": len(images),
+              "n_left_right_masks_checked": len(masks),
+              "images_all_byte_identical": all(r["byte_identical"] for r in images),
+              "masks_all_byte_identical": all(r["byte_identical"] for r in masks),
+              "all_15_objects_byte_identical": all(r["byte_identical"] for r in rows),
+              "official_image_png_bit_depths": sorted({r["official_nlm_png_ihdr_bit_depth"] for r in images}),
+              "hf_image_png_bit_depths": sorted({r["huggingface_png_ihdr_bit_depth"] for r in images}),
+              "official_mask_png_bit_depths": sorted({r["official_nlm_png_ihdr_bit_depth"] for r in masks}),
+              "hf_mask_png_bit_depths": sorted({r["huggingface_png_ihdr_bit_depth"] for r in masks}),
               "limitations": [
-                  "Checks only five files, not the complete 138-image collection.",
-                  "Matching hashes prove byte identity for these files, not clinical suitability.",
+                  "Checks five images and their ten masks, not the complete 138-image collection.",
+                  "Matching hashes establish byte identity only for these selected files.",
                   "PNG header bit depth and Pillow decoded dtype are reported independently."
               ]
           }
           (out / "provenance_summary.json").write_text(json.dumps(report, indent=2))
           print("\nSUMMARY\n" + json.dumps(report, indent=2))
-          if len(rows) != 5:
-              raise SystemExit("Expected five files")
+          if len(rows) != 15 or not report["all_15_objects_byte_identical"]:
+              raise SystemExit("Expected 15 byte-identical official/mirror objects")
           PY
 
       - name: Upload provenance comparison
