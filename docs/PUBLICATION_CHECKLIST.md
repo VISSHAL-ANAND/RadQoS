@@ -1,6 +1,9 @@
 # Publication Readiness Checklist
 
 ## Venue and template
+- Official IEEE conference authoring templates: https://conferences.ieeeauthorcenter.ieee.org/write-your-paper/authoring-tools-and-templates/
+- Official IEEE conference paper structure guidance: https://conferences.ieeeauthorcenter.ieee.org/write-your-paper/structure-your-paper/
+- IEEE guidance recommends a self-contained single-paragraph abstract of up to 250 words and 3–5 keywords; the specific venue instructions override general guidance.
 - [ ] Confirm the exact target conference or journal. “IEEE format” alone does not identify a single template or page limit.
 - [ ] Download the current official template from the IEEE Author Center and follow the venue's call for papers and submission instructions.
 - [ ] Use the supplied `IEEEpaper.pdf` only as a visual reference: it is a six-page, two-column conference paper with title/author block, abstract, keywords, numbered sections, tables/figures, references, and an appendix.
