@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/runner/work/research-papper/research-papper/benchmark.py", line 440, in <module>
+    main()
+  File "/home/runner/work/research-papper/research-papper/benchmark.py", line 289, in main
+    residual_payload = make_residual_payload(ref, base_recon)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/research-papper/research-papper/benchmark.py", line 210, in make_residual_payload
+    Image.fromarray(stored, mode="I;16").save(buf, format="PNG", optimize=True)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/PIL/Image.py", line 3451, in fromarray
+    raise ValueError(msg)
+ValueError: Invalid mode for data type
