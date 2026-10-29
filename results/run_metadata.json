@@ -1,0 +1,72 @@
+{
+  "run_timestamp_utc": "2026-10-29T14:37:48.676341+00:00",
+  "python_version": "3.12.15 (main, Oct  1 2026, 02:36:28) [GCC 15.2.0]",
+  "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.43",
+  "software_versions": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "Pillow": "13.0.0",
+    "scipy": "1.18.1",
+    "scikit_image": "0.26.0",
+    "huggingface_hub": "2.3.0"
+  },
+  "dataset_repo": "Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
+  "subset": "all MontgomerySet/CXR_png images when MAX_IMAGES=0; otherwise reproducible random sample with manual lung masks",
+  "n_images": 138,
+  "expected_full_set_images": 138,
+  "max_images_env": 0,
+  "seed": 42,
+  "ratios": [
+    4,
+    6,
+    8,
+    10,
+    15,
+    20,
+    30,
+    40,
+    60,
+    80,
+    120
+  ],
+  "q_min_ssim": 0.95,
+  "region_percentile": 5,
+  "grid": 8,
+  "max_abs_error": 24,
+  "fixed_jpeg_quality": 75,
+  "fixed_j2k_ratio": 20,
+  "latency_seconds": 0.5,
+  "profiles": {
+    "poor": [
+      128000.0,
+      0.5,
+      20.0
+    ],
+    "moderate": [
+      512000.0,
+      0.4,
+      20.0
+    ],
+    "good": [
+      2000000.0,
+      0.3,
+      20.0
+    ]
+  },
+  "synthetic": false,
+  "bandwidth_estimator": {
+    "initial_mean_bps": "profile_mean",
+    "initial_std_fraction": "profile_rel_std",
+    "lower_bound_formula": "max(mu - sigma, 0.1 * mu)",
+    "actual_bandwidth_distribution": "lognormal normalized to configured profile mean",
+    "ewma_alpha": 0.3
+  },
+  "notes": [
+    "Native 8-bit sources are unchanged. Integer sources with values in 0..4095 are mapped by a fixed linear full-range conversion to 8-bit; results therefore describe 8-bit renditions, not native 12-bit preservation.",
+    "PSNR is capped at 99 dB for exact reconstruction in the metric function.",
+    "The P2 residual is a separately encoded, losslessly compressed signed-pixel residual, not a progressive JPEG 2000 codestream.",
+    "Network conditions are simulated and are not measured real-world traces.",
+    "PSNR/SSIM do not establish diagnostic safety.",
+    "The dataset mirror lists its license as 'other'; check source terms and retain attribution."
+  ]
+}
