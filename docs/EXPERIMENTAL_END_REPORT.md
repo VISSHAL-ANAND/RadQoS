@@ -63,7 +63,7 @@ Sources:
 - Public mirror: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr
 - Dataset description: https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
 
-The mirror lists license metadata as “other.” The applicable terms and attribution requirements still need to be reviewed before publication or redistribution. The project does not rehost the source images or masks.
+The mirror lists license metadata as “other,” which is not a clear reuse license. The official NLM dataset ReadMe asks users not to share the dataset outside their research group/organization and requests that publications attribute the National Library of Medicine, National Institutes of Health, Bethesda, MD, USA, and cite both the tuberculosis-screening paper by Jaeger et al. (2014) and the lung-segmentation paper by Candemir et al. (2014). NLM’s general data terms also request the conspicuous acknowledgment “Courtesy of the U.S. National Library of Medicine” and prohibit implying NLM endorsement. This report does not redistribute images or masks. The manuscript should include the requested source attribution and both citations; do not upload or share source images/masks. If any intended use is ambiguous, contact NLM before submission.
 
 ## 4. Methods
 
