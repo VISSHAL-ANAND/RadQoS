@@ -2,4 +2,4 @@ numpy
 pandas
 Pillow
 scikit-image
-huggingface_hub
+scipy
