@@ -342,6 +342,89 @@ def build_publication_statistics(data):
         row["bootstrap_seed"] = SEED
     return pd.DataFrame(rows)
 
+def build_threshold_sensitivity(data):
+    """Descriptive threshold sensitivity from already encoded candidates.
+
+    No images are re-encoded. B3 infeasibility uses its documented best-SSIM
+    fallback; P1 infeasibility uses the measured per-image lossless JPEG 2000
+    payload from the matched B0 baseline. These are sensitivity analyses, not
+    independent validation or clinically justified thresholds.
+    """
+    cdf = data["candidates"]
+    lossless = data["lossless_quality"].set_index("image")
+    rows = []
+
+    for threshold in [0.90, 0.93, 0.95, 0.97, 0.98]:
+        selected, infeasible = [], 0
+        for image, group in cdf.groupby("image", sort=True):
+            feasible = group[group["ssim_mean"] >= threshold]
+            if len(feasible):
+                row = feasible.sort_values(["payload_bytes", "ssim_mean"], ascending=[True, False]).iloc[0]
+            else:
+                infeasible += 1
+                row = group.sort_values(["ssim_mean", "payload_bytes"], ascending=[False, True]).iloc[0]
+            selected.append({
+                "payload_bytes": float(row["payload_bytes"]),
+                "ssim_mean": float(row["ssim_mean"]),
+                "lung_region_ssim_p05": float(row["lung_region_ssim_p05"]),
+                "max_abs_error": float(row["max_abs_error"]),
+            })
+        frame = pd.DataFrame(selected)
+        rows.append({
+            "method": "B3_global_ssim", "global_ssim_threshold": threshold,
+            "regional_ssim_p05_threshold": np.nan, "max_abs_error_threshold": np.nan,
+            "n_images": int(len(frame)), "lossy_feasible_images": int(len(frame) - infeasible),
+            "lossy_infeasible_or_fallback_images": int(infeasible),
+            "lossy_feasibility_rate": float((len(frame) - infeasible) / len(frame)),
+            "mean_payload_bytes": float(frame["payload_bytes"].mean()),
+            "median_payload_bytes": float(frame["payload_bytes"].median()),
+            "p95_payload_bytes": float(frame["payload_bytes"].quantile(0.95)),
+            "mean_global_ssim": float(frame["ssim_mean"].mean()),
+            "mean_regional_ssim_p05": float(frame["lung_region_ssim_p05"].mean()),
+            "mean_max_abs_error": float(frame["max_abs_error"].mean()),
+        })
+
+    for regional_threshold in [0.90, 0.93, 0.95, 0.97]:
+        for max_error_threshold in [16, 24, 32]:
+            selected, infeasible = [], 0
+            for image, group in cdf.groupby("image", sort=True):
+                feasible = group[
+                    (group["lung_region_ssim_p05"] >= regional_threshold) &
+                    (group["max_abs_error"] <= max_error_threshold)
+                ]
+                if len(feasible):
+                    row = feasible.sort_values(["payload_bytes", "lung_region_ssim_p05"], ascending=[True, False]).iloc[0]
+                    selected.append({
+                        "payload_bytes": float(row["payload_bytes"]),
+                        "ssim_mean": float(row["ssim_mean"]),
+                        "lung_region_ssim_p05": float(row["lung_region_ssim_p05"]),
+                        "max_abs_error": float(row["max_abs_error"]),
+                    })
+                else:
+                    infeasible += 1
+                    if image not in lossless.index:
+                        raise ValueError(f"Missing B0 lossless payload for P1 fallback image {image}")
+                    selected.append({
+                        "payload_bytes": float(lossless.loc[image, "payload_bytes"]),
+                        "ssim_mean": 1.0, "lung_region_ssim_p05": 1.0, "max_abs_error": 0.0,
+                    })
+            frame = pd.DataFrame(selected)
+            rows.append({
+                "method": "P1_lung_region_bound", "global_ssim_threshold": np.nan,
+                "regional_ssim_p05_threshold": regional_threshold,
+                "max_abs_error_threshold": max_error_threshold,
+                "n_images": int(len(frame)), "lossy_feasible_images": int(len(frame) - infeasible),
+                "lossy_infeasible_or_fallback_images": int(infeasible),
+                "lossy_feasibility_rate": float((len(frame) - infeasible) / len(frame)),
+                "mean_payload_bytes": float(frame["payload_bytes"].mean()),
+                "median_payload_bytes": float(frame["payload_bytes"].median()),
+                "p95_payload_bytes": float(frame["payload_bytes"].quantile(0.95)),
+                "mean_global_ssim": float(frame["ssim_mean"].mean()),
+                "mean_regional_ssim_p05": float(frame["lung_region_ssim_p05"].mean()),
+                "mean_max_abs_error": float(frame["max_abs_error"].mean()),
+            })
+    return pd.DataFrame(rows)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", type=Path, required=True,
@@ -360,6 +443,9 @@ def main():
         try:
             stats = build_publication_statistics(data)
             stats.to_csv(args.output_dir / "paired_comparisons_adjusted.csv", index=False)
+            if "lossless_quality" in data:
+                sensitivity = build_threshold_sensitivity(data)
+                sensitivity.to_csv(args.output_dir / "sensitivity_analysis.csv", index=False)
         except Exception as exc:
             failed.append(f"Statistical analysis failed: {type(exc).__name__}: {exc}")
 
@@ -383,6 +469,7 @@ def main():
             f"- Holm adjustment is applied across all {len(stats)} comparisons in the generated table.",
             "- For P2, quality metrics describe the reconstruction available by the deadline; if the base arrives but the residual does not, they describe base-stage quality, not exact full reconstruction.",
             "- B0 comparisons are only valid if the quality-control report confirms that the primary and lossless runs used identical per-image/profile throughput draws.",
+            "- Threshold sensitivity is computed from the already encoded candidate table; P1 fallback sizes come from the matched lossless baseline. It is descriptive, post-hoc robustness analysis and does not establish clinical thresholds.",
             "- These comparisons do not establish clinical diagnostic safety; the network is simulated."
         ])
     report_path = args.output_dir / "quality_control_report.md"
