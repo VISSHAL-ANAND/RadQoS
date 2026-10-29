@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   benchmark:
@@ -38,6 +38,19 @@ jobs:
           RESULTS_DIR: results
           PYTHONUNBUFFERED: "1"
         run: python benchmark.py
+
+      - name: Publish result tables and manifest to repository
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/*.csv results/*.json
+          if git diff --cached --quiet; then
+            echo "No result changes to publish."
+          else
+            git commit -m "Publish real-image benchmark outputs [skip ci]"
+            git push
+          fi
 
       - name: Upload experiment results
         if: always()
