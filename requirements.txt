@@ -2,5 +2,3 @@ numpy
 pandas
 Pillow
 scikit-image
-scipy
-huggingface_hub
