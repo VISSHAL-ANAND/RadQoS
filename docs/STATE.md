@@ -10,6 +10,19 @@ Last reconciled: 2026-10-29 UTC
 - User supplied `IEEEpaper.pdf` as a visual reference. It is a six-page, two-column 2019 IEEE conference-proceedings paper. It is not the target manuscript; do not copy its content.
 - IEEE guidance says use the current official conference template and the target venue's instructions. Exact venue and page limit remain unknown.
 
+## Documentation baseline
+- `README.md` links to the documentation index.
+- `docs/PROJECT.md` records the research question, scope, methods, and exit criteria.
+- `docs/DATASET.md` records provenance, bit-depth discrepancy, attribution, and data-integrity checks.
+- `docs/EXPERIMENTS.md` records methods, simulated network settings, output contract, statistical rules, and run acceptance criteria.
+- `docs/DECISIONS.md` records methodological decisions and open questions.
+- `docs/TESTING.md` records unit, codec, dataset, full-run, and statistical validation requirements.
+- `docs/PUBLICATION.md` records the venue, integrity, attribution, author declarations, and final-document checklist.
+- `docs/TASKS.md` remains the prioritized task tracker.
+- `docs/INTERACTION_LOG.md` records this documentation update.
+- No `AGENTS.md` existed on the inspected branch; a repository-level guide has now been added.
+- These documentation changes are on `publication-readiness`, not merged to `main`.
+
 ## Manuscript and supporting documents recovered from the user's Library
 These exist outside the GitHub repository:
 - `IEEE_Manuscript_Quality_Constrained_Compression_DRAFT.docx` (six-page draft; created 2026-10-29 12:07 UTC)
@@ -56,7 +69,7 @@ The current draft is method-first and explicitly leaves full-set results pending
 ### Primary full-dataset benchmark
 - Run: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
 - Exact run code commit: `b8ead4566b07cf2130a3f06546392c6c739fa44b`.
-- Last checked: in progress, primary benchmark step running, no artifact yet. Job started 2026-10-29 11:23:27 UTC.
+- Last checked in the previous reconciliation: in progress, primary benchmark step running, no artifact yet. Job started 2026-10-29 11:23:27 UTC.
 - Current committed `results/run.log` ends at image 19/138, but that file is not conclusive evidence that the active run stopped there; it may be from an earlier published attempt.
 - Do not cancel or replace this run without checking its latest state. When it concludes or times out, inspect its job logs, artifacts, and published outputs.
 - Several earlier main-branch attempts were cancelled during iterative code changes; early attempts also failed. Do not present those as successful full-set experiments.
