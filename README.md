@@ -13,6 +13,9 @@ This repository evaluates a quality-constrained, deadline-aware compression pipe
 - [Current project state](docs/STATE.md)
 - [Prioritized publication tasks](docs/TASKS.md)
 - [Interaction log](docs/INTERACTION_LOG.md)
+- [Evidence-audited experimental end report](docs/EXPERIMENTAL_END_REPORT.md)
+- [Related-work audit](docs/RELATED_WORK_AUDIT.md)
+- [Manuscript revision map](docs/MANUSCRIPT_REVISION_MAP.md)
 
 ## Dataset and attribution
 
@@ -23,7 +26,7 @@ The workflow downloads selected files from the public Hugging Face mirror of the
 - Dataset paper: S. Jaeger et al., “Automatic tuberculosis screening using chest radiographs,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 233–245, Feb. 2014, doi: 10.1109/TMI.2013.2284099.
 - Related dataset description: https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
 
-The Hugging Face mirror lists its licence metadata as `other`; review the dataset card and original NLM source terms, retain attribution, and cite the dataset paper. Do not commit the source images or masks to this repository.
+The Hugging Face mirror lists its licence metadata as `other`, which is not a clear reuse license. The official NLM ReadMe asks users not to share the dataset outside their research group/organization and requests attribution to NLM plus citations to both the tuberculosis-screening and lung-segmentation papers. NLM's general terms request the acknowledgment “Courtesy of the U.S. National Library of Medicine” and prohibit implying NLM endorsement. Do not commit or rehost source images or masks. See [Dataset provenance and limitations](docs/DATASET.md) for the terms reviewed and the required citations.
 
 ## Methods
 
@@ -40,6 +43,8 @@ A GitHub Actions provenance audit checked the PNG IHDR header of every image in 
 ## Reproduction
 
 The current GitHub Actions workflow is configured to evaluate all 138 Montgomery images (`MAX_IMAGES=0`) in a cloud runner; it downloads the source images and masks at run time and decodes one image at a time to limit RAM use. For a faster preliminary pilot, set `MAX_IMAGES=30`; a fixed seed controls the random sample. A successful full-set run is still limited to this one dataset and does not establish clinical safety. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
+
+Expected primary-run outputs in `results/`; the supplemental lossless baseline artifacts and code are also preserved in `lossless-results/`, `supplemental_lossless_baseline.py`, and `.github/workflows/lossless-baseline.yml`.
 
 Expected outputs in `results/`:
 - `quality_by_image.csv`: quality/size results for B1, B2, B3, and P1.
