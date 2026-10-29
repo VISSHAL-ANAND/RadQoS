@@ -230,8 +230,10 @@ def main():
       n_images=("image","nunique"),n_images_quality_available=("psnr_db","count"),mean_full_payload_kb=("full_payload_kb","mean"),
       mean_psnr_db=("psnr_db","mean"),mean_ssim=("ssim_mean","mean"),
       mean_lung_region_ssim_p05=("lung_region_ssim_p05","mean"),
+      deadline_miss_rate=("deadline_miss","mean"),
       full_delivery_miss_rate=("full_delivery_miss","mean"),
       quality_bound_met_by_deadline_rate=("quality_bound_met_by_deadline","mean"),
+      mean_first_stage_seconds=("first_stage_seconds","mean"),
       mean_full_delivery_seconds=("full_delivery_seconds","mean"))
     summary.to_csv(out/"summary.csv",index=False)
     # Paired per-image inference: P1 versus B3 for quality-bound selection.
@@ -282,6 +284,7 @@ def main():
       "fixed_jpeg_quality":JPEG_Q,"fixed_j2k_ratio":FIXED_J2K,"latency_seconds":LATENCY,
       "profiles":PROFILES,"synthetic":False,
       "notes":["Native 8-bit sources are unchanged. Integer sources with values in 0..4095 are mapped by a fixed linear full-range conversion to 8-bit; results therefore describe 8-bit renditions, not native 12-bit preservation.",
+      "PSNR is capped at 99 dB for exact reconstruction in the metric function.",
       "The P2 residual is a separately encoded, losslessly compressed signed-pixel residual, not a progressive JPEG 2000 codestream.",
       "Network conditions are simulated and are not measured real-world traces.",
       "PSNR/SSIM do not establish diagnostic safety.",
