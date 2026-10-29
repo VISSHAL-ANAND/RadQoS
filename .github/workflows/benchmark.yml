@@ -30,20 +30,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
-      - name: Download official NLM Montgomery dataset
-        run: |
-          curl -fL --retry 3 --connect-timeout 30 --max-time 600 \
-            "https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet.zip" \
-            -o MontgomerySet.zip
-          mkdir -p data
-          unzip -q MontgomerySet.zip -d data
-          test -d data/MontgomerySet/CXR_png
-          echo "Image files: $(find data/MontgomerySet/CXR_png -name '*.png' | wc -l)"
-
       - name: Run real-image benchmark
         env:
-          DATA_DIR: "data/MontgomerySet"
           MAX_IMAGES: "0"
+          HF_HUB_DISABLE_TELEMETRY: "1"
           PYTHONUNBUFFERED: "1"
         run: |
           rm -rf results
