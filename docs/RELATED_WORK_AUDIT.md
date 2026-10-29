@@ -35,6 +35,19 @@ The dataset paper reports 138 Montgomery County frontal chest radiographs, 80 no
 - Official NLM source directory: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/
 - Current mirror dataset card: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr
 
+
+### 6. More recent work makes broad novelty claims especially risky
+Recent literature includes region-aware compression of chest CT, diagnosis-oriented learned medical-image compression, and reviews of JPEG/JPEG 2000 effects on deep-learning pipelines. These are not necessarily direct apples-to-apples baselines for the current hand-designed 8-bit CXR selector, but they show that “adaptive medical image compression” and “diagnosis-oriented compression” are active, established topics.
+
+- Y. Zhang, Z. Cai, and B. Ye, “An Image Importance Partition-Based Compression Method for COVID-19 Computed Tomography Scan,” IEEE Transactions on Industrial Informatics, 2021. DOI: https://doi.org/10.1109/TII.2021.3117258. This work extracts bilateral lung contours and adapts CT coding/quantization by image region.
+- G. Xie, X. S. Li, X. Pan, and Z. Chen, “Diagnosis-oriented Medical Image Compression with Efficient Transfer Learning,” IEEE International Conference on Visual Communications and Image Processing (VCIP), 2023. DOI: https://doi.org/10.1109/VCIP59821.2023.10402638. This work optimizes compression with a downstream medical task in view, using coronary-artery segmentation as its evaluation task.
+- I. A. Urbaniak, “Using Compressed JPEG and JPEG2000 Medical Images in Deep Learning: A Review,” Applied Sciences, 14(22), 10524, 2024. https://doi.org/10.3390/app142210524. Use it as a review map, then verify primary studies directly.
+- U. P. Srivastava and T. Fujii, “Region of Interest based Medical Image Compression,” arXiv:2501.02895, 2025. https://doi.org/10.48550/arXiv.2501.02895. This is a preprint, not evidence of peer-reviewed acceptance; treat accordingly.
+- “Lung Image Segmentation and Compression Using Deep Learning,” IEEE Xplore document 10743495. https://ieeexplore.ieee.org/document/10743495. Retrieve full metadata and read the paper before deciding how directly it overlaps.
+
+## Revised novelty risk
+**Risk level: high for a claim of a new adaptive/ROI compression method; moderate-to-high even for an empirical benchmark.** ROI-aware JPEG 2000, lung-region compression, and network-aware medical-image delivery are prior art. The likely defensible contribution is a carefully reproducible evaluation protocol and empirical result on a specific public 8-bit CXR representation—not a novel codec. To make the study competitive, the paper may need (a) corrected full-set evidence, (b) stronger or newer directly relevant baselines, (c) a justified sensitivity analysis, and (d) a clear explanation of why the chosen regional metric adds value beyond prior ROI coding. The target venue's standards determine whether this scope is sufficient.
+
 ## Appropriate contribution framing
 
 Do not claim a new compression codec, new ROI coding paradigm, new progressive JPEG 2000 method, or clinically safe threshold.
