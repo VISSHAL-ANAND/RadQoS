@@ -319,7 +319,7 @@ def build_publication_statistics(data):
             p_value, p2_ones_p1_zeros, p1_ones_p2_zeros = paired_binary_mcnemar_p(a, b)
             rows.append({
                 "comparison": f"P2_minus_P1_{profile}", "profile": profile, "metric": metric,
-                "n_pairs": int(len(diff)), "mean_difference_p2_minus_p1_or_p1_minus_b3": float(diff.mean()),
+                "n_pairs": int(len(diff)), "mean_difference": float(diff.mean()),
                 "median_difference": float(np.median(diff)), "bootstrap_ci95_low": lo,
                 "bootstrap_ci95_high": hi, "test": "Exact McNemar",
                 "p_value_raw": p_value, "discordant_p2_ones_p1_zeros": p2_ones_p1_zeros,
