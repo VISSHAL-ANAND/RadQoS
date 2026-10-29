@@ -223,7 +223,7 @@ def make_residual_payload(ref: np.ndarray, base_recon: np.ndarray) -> bytes:
     residual = ref.astype(np.int16) - base_recon.astype(np.int16)
     stored = (residual + 255).astype(np.uint16)
     buf = io.BytesIO()
-    Image.fromarray(stored, mode="I;16").save(buf, format="PNG", optimize=True)
+    Image.fromarray(stored).save(buf, format="PNG", optimize=True)
     return buf.getvalue()
 
 
