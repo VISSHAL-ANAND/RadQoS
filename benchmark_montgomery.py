@@ -116,46 +116,64 @@ def load_data():
             if i % 20 == 0 or i == len(futures):
                 print(f"Downloaded {i}/{len(futures)} selected image/mask files", flush=True)
 
+    # Keep only file paths and provenance in memory here. The source images are large
+    # (~20 megapixels each), so decoding all 138 images into arrays at once can exhaust
+    # the runner's RAM. Each image and its masks are decoded just before processing.
     out = []
     for image_path in image_paths:
         filename = image_path.rsplit("/", 1)[-1]
-        path = downloaded[image_path]
-        with Image.open(path) as im:
-            mode = im.mode
-            arr0 = np.asarray(im)
-        if arr0.ndim != 2:
-            raise RuntimeError(f"Non-grayscale source {filename}: mode={mode}, dtype={arr0.dtype}")
-        source_dtype = str(arr0.dtype)
-        source_min, source_max = int(arr0.min()), int(arr0.max())
-        if arr0.dtype == np.uint8:
-            arr = arr0.astype(np.uint8)
-            intensity_mapping = "identity_uint8"
-        elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
-            # Explicit, fixed full-range mapping for the source's 12-bit samples.
-            # This evaluates 8-bit renditions; it does NOT preserve native 12-bit precision.
-            arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
-            intensity_mapping = "fixed_linear_0_4095_to_0_255"
-        else:
-            raise RuntimeError(f"Unsupported source range for {filename}: mode={mode}, dtype={arr0.dtype}, min={source_min}, max={source_max}; no undocumented conversion applied.")
-        mask = np.zeros_like(arr, dtype=bool)
-        found = 0
+        image_file = downloaded[image_path]
+        mask_files = []
         for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
             mask_path = md + "/" + filename
             if mask_path in downloaded:
-                mp = downloaded[mask_path]
-                with Image.open(mp) as mi:
-                    ma = np.asarray(mi.convert("L"))
-                if ma.shape != arr.shape:
-                    raise RuntimeError(f"Mask shape mismatch for {filename}: {ma.shape} vs {arr.shape}")
-                mask |= ma > 0
-                found += 1
-        if found == 0:
+                mask_files.append(downloaded[mask_path])
+        if not mask_files:
             raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
-        source_file_bytes = path.stat().st_size
-        source_sha256 = hashlib.sha256(path.read_bytes()).hexdigest()
-        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max,
-                    intensity_mapping, source_file_bytes, source_sha256))
+        h = hashlib.sha256()
+        with image_file.open("rb") as source_stream:
+            for chunk in iter(lambda: source_stream.read(1024 * 1024), b""):
+                h.update(chunk)
+        out.append({
+            "filename": filename,
+            "image_path": image_file,
+            "mask_paths": mask_files,
+            "source_file_bytes": image_file.stat().st_size,
+            "source_sha256": h.hexdigest(),
+        })
     return out
+
+def decode_record(record):
+    """Decode and normalize one image and its masks; called one image at a time."""
+    name = record["filename"]
+    path = record["image_path"]
+    with Image.open(path) as im:
+        mode = im.mode
+        arr0 = np.asarray(im)
+    if arr0.ndim != 2:
+        raise RuntimeError(f"Non-grayscale source {name}: mode={mode}, dtype={arr0.dtype}")
+    source_dtype = str(arr0.dtype)
+    source_min, source_max = int(arr0.min()), int(arr0.max())
+    if arr0.dtype == np.uint8:
+        arr = arr0.astype(np.uint8)
+        intensity_mapping = "identity_uint8"
+    elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
+        # Explicit, fixed full-range mapping; this evaluates 8-bit renditions,
+        # not preservation of the source's native 12-bit precision.
+        arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
+        intensity_mapping = "fixed_linear_0_4095_to_0_255"
+    else:
+        raise RuntimeError(f"Unsupported source range for {name}: mode={mode}, dtype={arr0.dtype}, min={source_min}, max={source_max}; no undocumented conversion applied.")
+    mask = np.zeros_like(arr, dtype=bool)
+    for mp in record["mask_paths"]:
+        with Image.open(mp) as mi:
+            ma = np.asarray(mi.convert("L"))
+        if ma.shape != arr.shape:
+            raise RuntimeError(f"Mask shape mismatch for {name}: {ma.shape} vs {arr.shape}")
+        mask |= ma > 0
+    return (name, arr, mask, mode, len(record["mask_paths"]), source_dtype,
+            source_min, source_max, intensity_mapping, record["source_file_bytes"],
+            record["source_sha256"])
 
 def main():
     if not features.check("jpg_2000"): raise RuntimeError("Pillow lacks JPEG2000 support")
@@ -163,7 +181,9 @@ def main():
     rng = np.random.default_rng(SEED)
     estimator = {k: [v[0], (0.3*v[0])**2] for k,v in PROFILES.items()}
     quality_rows, delivery_rows, manifest_rows, candidate_rows = [], [], [], []
-    for ix,(name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,intensity_mapping,source_file_bytes,source_sha256) in enumerate(data,1):
+    for ix,record in enumerate(data,1):
+        (name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,
+         intensity_mapping,source_file_bytes,source_sha256) = decode_record(record)
         candidates=[]
         for ratio in RATIOS:
             payload,rec=encode(orig,"JPEG2000",ratio)
