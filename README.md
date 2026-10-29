@@ -23,7 +23,7 @@ The Hugging Face mirror lists its licence metadata as `other`; review the datase
 
 The codec candidate ratios are `[4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120]`. Network profiles are simulated with mean bandwidths of 128 kbps, 512 kbps, and 2 Mbps; throughput varies lognormally, a conservative lower-bound estimate is updated, latency is set to 0.5 s, and the deadline is 20 s. These are simulation settings, not measurements of live networks.
 
-Native 8-bit images are unchanged. Integer source images with values in 0–4095 are mapped linearly to 0–255 using a fixed denominator of 4095. The manifest records original source mode, dtype, range, intensity mapping, dimensions, source file size, SHA-256, and lung-mask coverage. This experiment evaluates 8-bit renditions; it does not establish preservation of native 12-bit information.
+In the five-image pilot, radiographs retrieved from the Hugging Face mirror were read by Pillow as grayscale mode `L` with `uint8` dtype. This differs from the original dataset paper’s description of 12-bit grayscale images and is an unresolved provenance/bit-depth discrepancy. The code passes these retrieved `uint8` values through unchanged; integer sources in the range 0–4095 would instead be mapped linearly to 0–255, and the manifest records the actual source mode, dtype, range, mapping, dimensions, size, SHA-256, and lung-mask coverage. Do not claim native 12-bit preservation until the exact source files and their pixel ranges are verified against the official NLM collection.
 
 ## Reproduction
 
