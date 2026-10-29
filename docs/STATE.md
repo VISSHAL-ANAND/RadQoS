@@ -48,9 +48,10 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Conclusion: success; all 138 real images processed and exact lossless reconstruction verified for all.
 - Mean payload: 3,854,278.043 bytes; median payload: 3,801,277.5 bytes.
 - Mean compression ratio versus raw 8-bit pixels: 5.311806:1.
-- Median encode time: 0.703837 s.
+- Median encode time in the latest rerun: 0.699541 s (timing is runner-dependent).
 - Simulated full-delivery miss rates: 100% at 128 kbps, 99.2754% at 512 kbps, 26.087% at 2 Mbps.
-- This is a supplemental standalone baseline, not the completed primary benchmark. Before paired comparison, verify same sorted image order, same random-draw order, and matching outcome definitions.
+- The latest successful rerun is 40885682147: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40885682147. Its CSVs, manifest, metadata, and log are now committed under `lossless-results/` on branch `lossless-baseline`.
+- This is a supplemental standalone baseline, not the completed primary benchmark. The baseline script documents matched sorted image order, seed, profile order, and throughput RNG draw order; the postprocessor independently checks actual per-image/profile bandwidth draws before paired comparisons.
 
 ### Primary full-dataset benchmark
 - Run: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
@@ -66,7 +67,7 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Added threshold sensitivity analysis over the already encoded candidate table; P1 fallback sizes use the matched lossless baseline. This is exploratory sensitivity analysis, not clinical threshold validation.
 - Added unit tests and a branch-specific GitHub Actions check. First unit-test run 40885534729 completed successfully; later code changes are awaiting the latest validation run.
 - Added an analysis workflow that reads main-branch primary outputs and the lossless-baseline branch, then uploads a report artifact without modifying main.
-- A rerun of the lossless baseline was started to publish its raw CSVs to the `lossless-baseline` branch; run 40885682147 was in progress at the last check.
+- A rerun of the lossless baseline completed successfully and published its raw CSVs to the `lossless-baseline` branch; run 40885682147 succeeded.
 - The analysis workflow currently has only produced a pending report because the complete primary result CSVs were not yet present on main.
 
 ## Initial methods/statistics audit
