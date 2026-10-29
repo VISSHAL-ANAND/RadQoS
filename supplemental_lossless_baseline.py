@@ -195,14 +195,14 @@ def main() -> None:
         mean_transfer_seconds=("full_delivery_seconds", "mean"),
     )
     summary.to_csv(output / "lossless_delivery_summary.csv", index=False)
-    quality_summary = qdf.agg(
-        n_images=("image", "nunique"),
-        mean_payload_bytes=("payload_bytes", "mean"),
-        median_payload_bytes=("payload_bytes", "median"),
-        mean_compression_ratio_vs_raw_8bit=("compression_ratio_vs_raw_8bit", "mean"),
-        median_encode_seconds=("encode_seconds", "median"),
-        all_round_trips_exact=("round_trip_exact", "all"),
-    )
+    quality_summary = {
+        "n_images": int(qdf["image"].nunique()),
+        "mean_payload_bytes": float(qdf["payload_bytes"].mean()),
+        "median_payload_bytes": float(qdf["payload_bytes"].median()),
+        "mean_compression_ratio_vs_raw_8bit": float(qdf["compression_ratio_vs_raw_8bit"].mean()),
+        "median_encode_seconds": float(qdf["encode_seconds"].median()),
+        "all_round_trips_exact": bool(qdf["round_trip_exact"].all()),
+    }
     metadata = {
         "run_timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "python_version": sys.version,
@@ -232,7 +232,9 @@ def main() -> None:
     }
     (output / "run_metadata.json").write_text(json.dumps(metadata, indent=2, default=str))
     print("\nLOSSLESS DELIVERY SUMMARY\n" + summary.to_string(index=False), flush=True)
-    print("QUALITY SUMMARY\n" + json.dumps({k: (v.item() if hasattr(v, "item") else v) for k, v in quality_summary.items()}, indent=2, default=str), flush=True)
+    print("QUALITY SUMMARY\n" + json.dumps(quality_summary, indent=2, default=str), flush=True)
+    if not quality_summary["all_round_trips_exact"] or quality_summary["n_images"] != 138:
+        raise RuntimeError("Lossless baseline validation failed")
     print(f"Completed: {len(records)} real images, standalone lossless JPEG 2000 baseline; all round trips exact.", flush=True)
 
 
