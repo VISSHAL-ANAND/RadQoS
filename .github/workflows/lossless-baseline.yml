@@ -1,0 +1,73 @@
+name: Supplemental standalone lossless JPEG 2000 baseline
+
+on:
+  push:
+    branches: [lossless-baseline]
+    paths:
+      - "supplemental_lossless_baseline.py"
+      - ".github/workflows/lossless-baseline.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lossless-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pandas Pillow huggingface_hub
+
+      - name: Run full-set standalone lossless baseline
+        env:
+          HF_HUB_DISABLE_TELEMETRY: "1"
+          PYTHONUNBUFFERED: "1"
+        run: |
+          rm -rf lossless-results
+          mkdir -p lossless-results
+          set -o pipefail
+          python supplemental_lossless_baseline.py 2>&1 | tee lossless-results/run.log
+
+      - name: Publish baseline outputs to repository branch
+        if: always()
+        run: |
+          mkdir -p /tmp/lossless-results
+          cp -a lossless-results/. /tmp/lossless-results/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin lossless-baseline
+          git reset --hard origin/lossless-baseline
+          mkdir -p lossless-results
+          cp -a /tmp/lossless-results/. lossless-results/ 2>/dev/null || true
+          git add -A lossless-results/
+          if git diff --cached --quiet; then
+            echo "No baseline outputs to publish."
+          else
+            git commit -m "Publish full-set lossless baseline outputs [skip ci]"
+            git push origin HEAD:lossless-baseline
+          fi
+
+      - name: Upload baseline result files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: montgomery-lossless-j2k-baseline
+          path: lossless-results/
+          if-no-files-found: warn
+          retention-days: 30
