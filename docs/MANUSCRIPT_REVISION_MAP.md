@@ -5,7 +5,7 @@ Target file recovered from Library: `IEEE_Manuscript_Quality_Constrained_Compres
 ## Required changes by section
 
 ### Front matter
-- Replace title only after deciding whether P2 is a main method or a negative/ablation result. A conservative title should describe an empirical evaluation, not imply a new codec.
+- Replace title only after deciding whether P2 is a main method or a negative/ablation result. Provisional conservative option: “An Empirical Evaluation of Lung-Region-Constrained JPEG 2000 Selection for Deadline-Bounded Chest Radiograph Transmission.” This describes the actual candidate-selection study without implying a new codec. Finalize only after results and venue scope are known.
 - Replace author/affiliation/email placeholders only with user-confirmed details.
 - Confirm target venue, official template, paper length, and conference metadata. Remove the draft's custom “ADAPTIVE MEDICAL-IMAGE COMPRESSION | WORKING DRAFT” running header. Never copy the example PDF's conference header, DOI, copyright line, or event branding; include venue-specific marks only when the official template/instructions require them.
 - Keep abstract provisional until the primary full-set analysis passes QC. Final abstract must contain only final numbers and conclusions.
