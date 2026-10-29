@@ -439,9 +439,18 @@ def main() -> None:
         for metric in ("bytes", "ssim", "psnr_db", "lung_roi_ssim_p5", "max_abs_error"):
             values = group[metric].to_numpy(dtype=float)
             low, high = bootstrap_ci(values, seed_offset=int(row_index) * 11 + len(metric))
+            finite_values = values[np.isfinite(values)]
+            if len(finite_values):
+                metric_mean = float(np.mean(finite_values))
+                if metric == "psnr_db" and np.isposinf(values).any():
+                    metric_mean = float("inf")
+            elif np.isposinf(values).any():
+                metric_mean = float("inf")
+            else:
+                metric_mean = float("nan")
             ci_rows.append({
                 "bandwidth_mbps": row["bandwidth_mbps"], "method": row["method"],
-                "metric": metric, "mean": float(np.nanmean(values)) if np.isfinite(values).any() else float("inf"),
+                "metric": metric, "mean": metric_mean,
                 "ci95_low": low, "ci95_high": high, "n": int(np.isfinite(values).sum()),
                 "interval_method": "percentile bootstrap, 2000 resamples; non-finite values excluded",
             })
