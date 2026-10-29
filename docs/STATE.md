@@ -7,10 +7,13 @@ Last reconciled: 2026-10-29 UTC
 - Publication-support changes and unique content from all four working branches have been merged into `main` through PRs #1–#4. The branch refs still exist; this connected GitHub toolset does not expose branch deletion.
 - Research topic: quality-constrained and deadline-aware compression of Montgomery County chest radiographs.
 - Experimental report: [docs/EXPERIMENTAL_END_REPORT.md](EXPERIMENTAL_END_REPORT.md).
+- New complete author-review manuscript draft: [docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md](IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md); it includes the verified results and related-work section but is not a final submission PDF.
+- Focused citation review: [docs/RELATED_WORK_AUDIT.md](RELATED_WORK_AUDIT.md).
 - User's existing manuscript drafts are in the ChatGPT Library; do not claim they have been updated unless the files are actually edited.
 - Author details and target council/venue/template/page limit are not confirmed.
 - Similarity checker has not been run; no actual similarity score is known.
-- No final submission PDF has been generated in this work session.
+- No final submission PDF has been generated in this work session. Document generation is unavailable in this session; do not claim a PDF exists.
+- Manuscript text now integrates the measured results, statistics, simulation outcomes, and limitations. It still needs author metadata, target venue/template, final reference verification, and similarity/PDF compliance checks.
 
 ## Primary full-dataset benchmark
 - Workflow: https://github.com/VISSHAL-ANAND/research-papper/actions/runs/40865016332
