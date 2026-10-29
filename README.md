@@ -14,6 +14,8 @@ This repository evaluates a quality-constrained, deadline-aware compression pipe
 - [Prioritized publication tasks](docs/TASKS.md)
 - [Interaction log](docs/INTERACTION_LOG.md)
 - [Evidence-audited experimental end report](docs/EXPERIMENTAL_END_REPORT.md)
+- [IEEE manuscript author-review draft](docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md) — includes measured results; requires author/venue details and final formatting
+- [Related-work and citation audit](docs/RELATED_WORK_AUDIT.md)
 - [Related-work audit](docs/RELATED_WORK_AUDIT.md)
 - [Manuscript revision map](docs/MANUSCRIPT_REVISION_MAP.md)
 
