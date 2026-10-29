@@ -24,6 +24,13 @@ Updated: 2026-10-29 UTC
 - [x] Document that P2 is a custom base-plus-residual format, not standards-compliant progressive JPEG 2000.
 - [x] Document all 138 lossless reconstructions and the paired-throughput matching check.
 
+## Branch content consolidation
+- [x] Merge publication-readiness documentation, analysis script, tests, and workflows into `main` (PR #1).
+- [x] Merge standalone lossless baseline code, workflow, and measured CSV/log/metadata artifacts into `main` (PR #2).
+- [x] Merge dataset provenance audit workflow into `main` (PR #3).
+- [x] Merge isolated five-image pilot workflow into `main` (PR #4).
+- [ ] Delete the four non-main branch refs after verifying their unique content is present on `main`; branch deletion is not exposed by the GitHub actions available in this session.
+
 ## Publication items not honestly verifiable as complete yet
 - [ ] Verify applicable official NLM reuse terms and mirror terms before publication/redistribution.
 - [ ] Finish primary-source verification and integrate a complete, balanced related-work section into the manuscript.
