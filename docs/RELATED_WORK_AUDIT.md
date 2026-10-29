@@ -39,7 +39,7 @@ The dataset paper reports 138 Montgomery County frontal chest radiographs, 80 no
 ### 6. More recent work makes broad novelty claims especially risky
 Recent literature includes region-aware compression of chest CT, diagnosis-oriented learned medical-image compression, and reviews of JPEG/JPEG 2000 effects on deep-learning pipelines. These are not necessarily direct apples-to-apples baselines for the current hand-designed 8-bit CXR selector, but they show that “adaptive medical image compression” and “diagnosis-oriented compression” are active, established topics.
 
-- Y. Zhang, Z. Cai, and B. Ye, “An Image Importance Partition-Based Compression Method for COVID-19 Computed Tomography Scan,” IEEE Transactions on Industrial Informatics, 2021. DOI: https://doi.org/10.1109/TII.2021.3117258. This work extracts bilateral lung contours and adapts CT coding/quantization by image region.
+- Y. Zhang, Z. Cai, and B. Ye, “An Image Importance Partition-Based Compression Method for COVID-19 Computed Tomography Scan,” IEEE Transactions on Industrial Informatics, vol. 18, no. 7, pp. 4596–4607, July 2022. DOI: https://doi.org/10.1109/TII.2021.3117258. This work extracts bilateral lung contours and adapts CT coding/quantization by image region.
 - G. Xie, X. S. Li, X. Pan, and Z. Chen, “Diagnosis-oriented Medical Image Compression with Efficient Transfer Learning,” IEEE International Conference on Visual Communications and Image Processing (VCIP), 2023. DOI: https://doi.org/10.1109/VCIP59821.2023.10402638. This work optimizes compression with a downstream medical task in view, using coronary-artery segmentation as its evaluation task.
 - I. A. Urbaniak, “Using Compressed JPEG and JPEG2000 Medical Images in Deep Learning: A Review,” Applied Sciences, 14(22), 10524, 2024. https://doi.org/10.3390/app142210524. Use it as a review map, then verify primary studies directly.
 - U. P. Srivastava and T. Fujii, “Region of Interest based Medical Image Compression,” arXiv:2501.02895, 2025. https://doi.org/10.48550/arXiv.2501.02895. This is a preprint, not evidence of peer-reviewed acceptance; treat accordingly.
@@ -47,6 +47,20 @@ Recent literature includes region-aware compression of chest CT, diagnosis-orien
 
 ## Revised novelty risk
 **Risk level: high for a claim of a new adaptive/ROI compression method; moderate-to-high even for an empirical benchmark.** ROI-aware JPEG 2000, lung-region compression, and network-aware medical-image delivery are prior art. The likely defensible contribution is a carefully reproducible evaluation protocol and empirical result on a specific public 8-bit CXR representation—not a novel codec. To make the study competitive, the paper may need (a) corrected full-set evidence, (b) stronger or newer directly relevant baselines, (c) a justified sensitivity analysis, and (d) a clear explanation of why the chosen regional metric adds value beyond prior ROI coding. The target venue's standards determine whether this scope is sufficient.
+
+## Prior-work comparison for the manuscript
+
+| Work | Established contribution | Relevance to this study | Necessary distinction |
+|---|---|---|---|
+| Odry et al. (2005) | 3D region-based JPEG 2000 using segmented lung regions; evaluates downstream lung-nodule detection | Lung ROI and JPEG 2000 are established | Current P1 does not allocate different bit rates to ROI/background; it selects a whole-image codestream using an ROI-derived metric |
+| Kim et al. (2008) | Regional compression-artifact evaluation in low-dose chest CT, including perceptual/reader considerations | Shows that anatomical-region distortions and objective metrics require care | Current work has no radiologist reader study or CT images |
+| Koff et al. (2009) | Multi-modality, multi-region lossy-compression evaluation with diagnostic criteria | Supports careful compression-quality claims and task-specific validation | Current work reports engineering metrics and simulated delivery only |
+| Doukas & Maglogiannis (2008) | Scalable, context-aware wireless medical-image/video transmission | Adaptive/network-aware transmission is prior art | Current work is a simple offline candidate selector and simulated link model |
+| Noumeir & Pambrun (2011) | JPEG 2000 Interactive Protocol streaming of large images/sets | Standardized interactive delivery is prior art | Current P2 is not JPIP and not a standards-compliant progressive codestream |
+| Zhang et al. (2022) | Importance-partition compression for COVID-19 chest CT with lung contours and region-dependent coding | Direct overlap with lung-region-aware compression | Current study uses Montgomery CXR and a global candidate codestream constrained by regional metrics |
+| Xie et al. (2023) | Diagnosis-oriented learned compression with transfer learning and a downstream segmentation task | Directly relevant to task-oriented medical compression | Current work does not train a codec or evaluate diagnostic-task accuracy |
+| Urbaniak (2024) | Review of compressed JPEG/JPEG 2000 images in deep-learning pipelines | Useful map of later studies and downstream effects | Use it to find primary studies; do not cite the review as proof of a specific algorithm's results |
+| Pambrun & Noumeir (2015) | Analysis of SSIM limitations in diagnostic imaging | Supports the construct-validity limitation | Current SSIM thresholds are engineering constraints, not clinical thresholds |
 
 ## Appropriate contribution framing
 
