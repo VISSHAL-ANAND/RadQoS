@@ -115,7 +115,7 @@ def _close(a, b, tol=1e-6):
         return False
     return bool(np.isclose(float(a), float(b), rtol=tol, atol=tol))
 
-def validate_results(results_dir: Path):
+def validate_results(results_dir: Path, lossless_dir: Path | None = None):
     """Return loaded dataframes, passed checks, and failures."""
     passed, failed = [], []
     def check(condition, label):
@@ -140,6 +140,48 @@ def validate_results(results_dir: Path):
 
     data = {"quality": qdf, "delivery": ddf, "candidates": cdf, "manifest": mdf,
             "summary": sdf, "paired": pdf, "monotonicity": mono, "metadata": meta, "log": log}
+
+    # The standalone lossless baseline is produced on its own branch but uses the
+    # same sorted image order, seed, profile order, and throughput draws.
+    if lossless_dir is not None:
+        lossless_required = [
+            "lossless_quality_by_image.csv", "lossless_delivery_by_image_profile.csv",
+            "lossless_manifest.csv", "lossless_delivery_summary.csv", "run_metadata.json", "run.log"
+        ]
+        missing_lossless = [name for name in lossless_required if not (lossless_dir / name).is_file()]
+        if missing_lossless:
+            failed.append(f"Missing required lossless-baseline files: {', '.join(missing_lossless)}")
+        else:
+            try:
+                lq = pd.read_csv(lossless_dir / "lossless_quality_by_image.csv")
+                ld = pd.read_csv(lossless_dir / "lossless_delivery_by_image_profile.csv")
+                lm = pd.read_csv(lossless_dir / "lossless_manifest.csv")
+                ls = pd.read_csv(lossless_dir / "lossless_delivery_summary.csv")
+                lmeta = json.loads((lossless_dir / "run_metadata.json").read_text())
+                llog = (lossless_dir / "run.log").read_text(errors="replace")
+                data.update({"lossless_quality": lq, "lossless_delivery": ld,
+                             "lossless_manifest": lm, "lossless_summary": ls,
+                             "lossless_metadata": lmeta, "lossless_log": llog})
+                check(len(lq) == EXPECTED_IMAGES, f"Lossless quality row count is {len(lq)} (expected {EXPECTED_IMAGES})")
+                check(len(ld) == EXPECTED_IMAGES * 3, f"Lossless delivery row count is {len(ld)} (expected {EXPECTED_IMAGES * 3})")
+                check(len(lm) == EXPECTED_IMAGES, f"Lossless manifest row count is {len(lm)} (expected {EXPECTED_IMAGES})")
+                check(not lq["image"].duplicated().any(), "No duplicate lossless quality image keys")
+                check(not ld.duplicated(["image", "profile"]).any(), "No duplicate lossless image/profile keys")
+                check(set(lm["image"]) == set(mdf["image"]), "Lossless and primary runs contain the same 138 image names")
+                check(bool(_bool_series(lq["round_trip_exact"]).all()), "Lossless JPEG 2000 round trips are exact for all images")
+                check(lmeta.get("exact_reconstruction_verified") is True, "Lossless metadata confirms exact reconstruction")
+                check("all round trips exact" in llog.lower(), "Lossless log records exact reconstruction completion")
+                check(len(ls) == 3 and set(ls["profile"]) == {"poor", "moderate", "good"},
+                      "Lossless summary contains all three network profiles")
+                # Confirm the two runs used the same seeded throughput draws before making paired comparisons.
+                primary_bw = ddf.groupby(["image", "profile"])["actual_bandwidth_bps"].first().sort_index()
+                lossless_bw = ld.set_index(["image", "profile"])["actual_bandwidth_bps"].sort_index()
+                same_draws = primary_bw.index.equals(lossless_bw.index) and np.allclose(
+                    primary_bw.to_numpy(dtype=float), lossless_bw.to_numpy(dtype=float), rtol=1e-12, atol=1e-9
+                )
+                check(bool(same_draws), "Lossless and primary runs use identical per-image/profile throughput draws")
+            except Exception as exc:
+                failed.append(f"Could not parse or validate lossless-baseline outputs: {type(exc).__name__}: {exc}")
 
     check(len(mdf) == EXPECTED_IMAGES, f"Manifest row count is {len(mdf)} (expected {EXPECTED_IMAGES})")
     check(mdf["image"].nunique() == EXPECTED_IMAGES, "Manifest contains 138 unique images")
@@ -242,11 +284,11 @@ def build_publication_statistics(data):
         rng_seed += 1
         rows.append({
             "comparison": "P1_minus_B3", "profile": "all", "metric": metric,
-            "n_pairs": int(len(diff)), "mean_difference_p2_minus_p1_or_p1_minus_b3": float(diff.mean()),
+            "n_pairs": int(len(diff)), "mean_difference": float(diff.mean()),
             "median_difference": float(np.median(diff)), "bootstrap_ci95_low": lo,
             "bootstrap_ci95_high": hi, "test": "Wilcoxon signed-rank",
             "p_value_raw": paired_numeric_test(diff), "discordant_p2_ones_p1_zeros": np.nan,
-            "discordant_p1_ones_p2_zeros": np.nan,
+            "discordant_p1_ones_p2_zeros": np.nan, "direction": "P1 minus B3",
         })
 
     # Paired binary outcomes: P2 minus P1, by profile. Exact McNemar is appropriate
@@ -269,8 +311,33 @@ def build_publication_statistics(data):
                 "median_difference": float(np.median(diff)), "bootstrap_ci95_low": lo,
                 "bootstrap_ci95_high": hi, "test": "Exact McNemar",
                 "p_value_raw": p_value, "discordant_p2_ones_p1_zeros": p2_ones_p1_zeros,
-                "discordant_p1_ones_p2_zeros": p1_ones_p2_zeros,
+                "discordant_p1_ones_p2_zeros": p1_ones_p2_zeros, "direction": "P2 minus P1",
             })
+
+    # Add the full-set lossless baseline (B0) only when its raw per-image
+    # outputs are available and have passed the validation gates.
+    if "lossless_delivery" in data:
+        b0g = data["lossless_delivery"]
+        for profile in ["poor", "moderate", "good"]:
+            p1g = ddf[(ddf.profile == profile) & (ddf.method == "P1_lung_region_bound_single")].set_index("image")
+            b0p = b0g[b0g.profile == profile].set_index("image")
+            for metric in ["full_delivery_miss", "quality_bound_met_by_deadline"]:
+                pair = pd.concat([p1g[metric].rename("p1"), b0p[metric].rename("b0")], axis=1).dropna()
+                p1_values = pair["p1"].to_numpy(dtype=int)
+                b0_values = pair["b0"].to_numpy(dtype=int)
+                diff = b0_values.astype(float) - p1_values.astype(float)
+                lo, hi = paired_bootstrap_mean_ci(diff, seed=rng_seed)
+                rng_seed += 1
+                p_value, b0_ones_p1_zeros, p1_ones_b0_zeros = paired_binary_mcnemar_p(p1_values, b0_values)
+                rows.append({
+                    "comparison": f"B0_minus_P1_{profile}", "profile": profile, "metric": metric,
+                    "n_pairs": int(len(diff)), "mean_difference": float(diff.mean()),
+                    "median_difference": float(np.median(diff)), "bootstrap_ci95_low": lo,
+                    "bootstrap_ci95_high": hi, "test": "Exact McNemar",
+                    "p_value_raw": p_value, "discordant_b0_ones_p1_zeros": b0_ones_p1_zeros,
+                    "discordant_p1_ones_b0_zeros": p1_ones_b0_zeros,
+                    "direction": "B0 minus P1",
+                })
 
     adjusted = holm_adjust([float(row["p_value_raw"]) for row in rows])
     for row, p_adj in zip(rows, adjusted):
@@ -288,7 +355,7 @@ def main():
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    data, passed, failed = validate_results(args.results_dir)
+    data, passed, failed = validate_results(args.results_dir, args.lossless_results_dir)
     timestamp = datetime.now(timezone.utc).isoformat()
     report = [
         "# Primary Benchmark Quality-Control Report", "",
@@ -309,7 +376,7 @@ def main():
                 "- P1 versus B3: paired per-image differences for payload bytes, PSNR, global SSIM, and regional SSIM; two-sided Wilcoxon signed-rank tests.",
                 "- P2 versus P1: paired per-image binary outcomes by network profile; exact two-sided McNemar tests and discordant-pair counts.",
                 f"- Paired bootstrap percentile 95% confidence intervals use {BOOTSTRAP_RESAMPLES} resamples of image-level paired differences, seed {SEED}.",
-                "- Holm adjustment is applied across all ten prespecified comparisons in the generated table.",
+                "- Holm adjustment is applied across all comparisons in the generated table (10 primary comparisons, plus 6 B0-versus-P1 comparisons when the validated lossless baseline is supplied).",
                 "- Interpret the P2 quality metric as the reconstruction available by the deadline: if the base arrives but the residual does not, this is base-stage quality, not exact full reconstruction.",
                 "- These comparisons do not establish clinical diagnostic safety; the network is simulated."
             ])
