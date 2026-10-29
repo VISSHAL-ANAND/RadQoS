@@ -454,12 +454,31 @@ def main():
     data, passed, failed = validate_results(args.results_dir, args.lossless_results_dir)
     timestamp = datetime.now(timezone.utc).isoformat()
     stats = None
+    sensitivity = None
     if not failed:
         try:
             stats = build_publication_statistics(data)
-            stats.to_csv(args.output_dir / "paired_comparisons_adjusted.csv", index=False)
             if "lossless_quality" in data:
                 sensitivity = build_threshold_sensitivity(data)
+                qdf = data["quality"]
+                b3_actual = float(qdf.loc[qdf["method"] == "B3_mean_ssim_single", "payload_bytes"].mean())
+                p1_actual = float(qdf.loc[qdf["method"] == "P1_lung_region_bound_single", "payload_bytes"].mean())
+                b3_row = sensitivity[
+                    (sensitivity["method"] == "B3_global_ssim") &
+                    (sensitivity["global_ssim_threshold"] == 0.95)
+                ].iloc[0]
+                p1_row = sensitivity[
+                    (sensitivity["method"] == "P1_lung_region_bound") &
+                    (sensitivity["regional_ssim_p05_threshold"] == 0.95) &
+                    (sensitivity["max_abs_error_threshold"] == 24)
+                ].iloc[0]
+                if not _close(b3_row["mean_payload_bytes"], b3_actual, tol=1e-9):
+                    raise ValueError("B3 sensitivity at SSIM 0.95 does not reproduce the primary B3 mean payload")
+                if not _close(p1_row["mean_payload_bytes"], p1_actual, tol=1e-9):
+                    raise ValueError("P1 sensitivity at regional SSIM 0.95 / max error 24 does not reproduce the primary P1 mean payload")
+                passed.append("Sensitivity analysis reproduces the primary B3 and P1 operating-point mean payloads")
+            stats.to_csv(args.output_dir / "paired_comparisons_adjusted.csv", index=False)
+            if sensitivity is not None:
                 sensitivity.to_csv(args.output_dir / "sensitivity_analysis.csv", index=False)
         except Exception as exc:
             failed.append(f"Statistical analysis failed: {type(exc).__name__}: {exc}")
