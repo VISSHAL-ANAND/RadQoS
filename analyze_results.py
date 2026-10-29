@@ -323,7 +323,7 @@ def build_publication_statistics(data):
                 p1_values = pair["p1"].to_numpy(dtype=int)
                 b0_values = pair["b0"].to_numpy(dtype=int)
                 diff = b0_values.astype(float) - p1_values.astype(float)
-                lo, hi = paired_bootstrap_mean_ci(diff, seed=rng_seed)
+                lo, hi = paired_bootstrap_mean_ci(diff, seed=SEED)
                 p_value, b0_ones_p1_zeros, p1_ones_b0_zeros = paired_binary_mcnemar_p(p1_values, b0_values)
                 rows.append({
                     "comparison": f"B0_minus_P1_{profile}", "profile": profile, "metric": metric,
