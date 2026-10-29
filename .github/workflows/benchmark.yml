@@ -37,18 +37,21 @@ jobs:
           DATA_ROOT: data/MontgomerySet
           RESULTS_DIR: results
           PYTHONUNBUFFERED: "1"
-        run: python benchmark.py
+        run: |
+          mkdir -p results
+          set -o pipefail
+          python benchmark.py 2>&1 | tee results/run.log
 
-      - name: Publish result tables and manifest to repository
-        if: success()
+      - name: Publish run outputs and diagnostics to repository
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add results/*.csv results/*.json
+          git add -A results/ || true
           if git diff --cached --quiet; then
-            echo "No result changes to publish."
+            echo "No run output to publish."
           else
-            git commit -m "Publish real-image benchmark outputs [skip ci]"
+            git commit -m "Publish benchmark run outputs and diagnostics [skip ci]"
             git push
           fi
 
