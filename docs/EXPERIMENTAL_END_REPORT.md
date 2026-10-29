@@ -290,7 +290,7 @@ The results are valid only within the declared data representation, candidate se
 
 [4] Z. Wang, A. C. Bovik, H. R. Sheikh, and E. P. Simoncelli, “Image quality assessment: From error visibility to structural similarity,” *IEEE Transactions on Image Processing*, vol. 13, no. 4, pp. 600–612, Apr. 2004, doi: 10.1109/TIP.2003.819861.
 
-[5] J.-F. Pambrun and R. Noumeir, “Limitations of the SSIM quality metric in the context of diagnostic imaging,” in *Proceedings of the IEEE International Conference on Image Processing (ICIP)*, 2015, doi: 10.1109/ICIP.2015.7351345. Verify full proceedings metadata before submission.
+[5] J.-F. Pambrun and R. Noumeir, “Limitations of the SSIM quality metric in the context of diagnostic imaging,” in *Proceedings of the IEEE International Conference on Image Processing (ICIP)*, pp. 2960–2963, Quebec City, Canada, Sep. 2015, doi: 10.1109/ICIP.2015.7351345.
 
 [6] S. Jaeger et al., “Automatic screening for tuberculosis in chest radiographs: a survey,” *Quantitative Imaging in Medicine and Surgery*, vol. 3, no. 2, pp. 89–99, Apr. 2013, doi: 10.3978/j.issn.2223-4292.2013.04.03.
 
@@ -303,6 +303,8 @@ The results are valid only within the declared data representation, candidate se
 [10] U.S. National Library of Medicine, “NLM-MontgomeryCXRSet ReadMe,” dataset citation and use instructions. [Online]. Available: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/MontgomerySet/NLM-MontgomeryCXRSet-ReadMe.pdf.
 
 [11] U.S. National Library of Medicine, “National Library of Medicine Terms and Conditions,” last reviewed May 21, 2019. [Online]. Available: https://www.nlm.nih.gov/databases/download/terms_and_conditions.html.
+
+[12] R. Noumeir and J.-F. Pambrun, “Using JPEG 2000 interactive protocol to stream a large image or a large image set,” *Journal of Digital Imaging*, vol. 24, no. 5, pp. 833–843, Oct. 2011, doi: 10.1007/s10278-010-9343-0.
 
 
 ---
