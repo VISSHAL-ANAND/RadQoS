@@ -374,7 +374,7 @@ def build_threshold_sensitivity(data):
         for image, group in cdf.groupby("image", sort=True):
             feasible = group[group["ssim_mean"] >= threshold]
             if len(feasible):
-                row = feasible.sort_values(["payload_bytes", "ssim_mean"], ascending=[True, False]).iloc[0]
+                row = feasible.sort_values(["payload_bytes"], kind="stable").iloc[0]
             else:
                 infeasible += 1
                 row = group.sort_values(["ssim_mean", "payload_bytes"], ascending=[False, True]).iloc[0]
