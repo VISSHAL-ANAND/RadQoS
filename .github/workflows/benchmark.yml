@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "benchmark.py"
+      - "benchmark_montgomery.py"
       - "requirements.txt"
       - ".github/workflows/benchmark.yml"
       - ".github/workflows/run-benchmark.yml"
@@ -39,14 +40,14 @@ jobs:
 
       - name: Run real-image benchmark
         env:
-          DATA_ROOT: data/MontgomerySet
-          RESULTS_DIR: results
+          MAX_IMAGES: "0"
+          HF_HUB_DISABLE_TELEMETRY: "1"
           PYTHONUNBUFFERED: "1"
         run: |
           rm -rf results
           mkdir -p results
           set -o pipefail
-          python benchmark.py 2>&1 | tee results/run.log
+          python benchmark_montgomery.py 2>&1 | tee results/run.log
 
       - name: Publish run outputs and diagnostics to repository
         if: always()
@@ -54,7 +55,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
-          if [ "$(git rev-parse HEAD:benchmark.py)" != "$(git rev-parse origin/main:benchmark.py)" ] || [ "$(git rev-parse HEAD:requirements.txt)" != "$(git rev-parse origin/main:requirements.txt)" ]; then
+          if [ "$(git rev-parse HEAD:benchmark_montgomery.py)" != "$(git rev-parse origin/main:benchmark_montgomery.py)" ] || [ "$(git rev-parse HEAD:requirements.txt)" != "$(git rev-parse origin/main:requirements.txt)" ]; then
             echo "Benchmark code or dependencies changed during this run; skipping stale results."
             exit 0
           fi
