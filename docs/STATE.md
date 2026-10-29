@@ -65,7 +65,7 @@ The current draft is method-first and explicitly leaves full-set results pending
 - Added `analyze_results.py` to validate expected output counts, image/mask keys, constraints, residual-related completion logs, and summary aggregates.
 - Added paired continuous analysis (Wilcoxon + paired bootstrap CI), exact McNemar tests for paired binary outcomes, and Holm adjustment.
 - Added threshold sensitivity analysis over the already encoded candidate table; P1 fallback sizes use the matched lossless baseline. This is exploratory sensitivity analysis, not clinical threshold validation.
-- Added unit tests and a branch-specific GitHub Actions check. First unit-test run 40885534729 completed successfully; later code changes are awaiting the latest validation run.
+- Added unit tests and a branch-specific GitHub Actions check. Latest test run 40886253948 completed successfully, including the threshold-sensitivity test. An earlier run failed because the test omitted a pandas import; that was corrected and the rerun passed.
 - Added an analysis workflow that reads main-branch primary outputs and the lossless-baseline branch, then uploads a report artifact without modifying main.
 - A rerun of the lossless baseline completed successfully and published its raw CSVs to the `lossless-baseline` branch; run 40885682147 succeeded.
 - The analysis workflow currently has only produced a pending report because the complete primary result CSVs were not yet present on main.
