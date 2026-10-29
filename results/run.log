@@ -1,10 +1,41 @@
-Traceback (most recent call last):
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 298, in <module>
-    if __name__=="__main__": main()
-                             ^^^^^^
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 132, in main
-    data = load_data()
-           ^^^^^^^^^^^
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 86, in load_data
-    raise RuntimeError(f"No Montgomery PNGs found under {image_dir}; confirm official dataset download/unzip step.")
-RuntimeError: No Montgomery PNGs found under data/MontgomerySet/CXR_png; confirm official dataset download/unzip step.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Downloaded 20/414 selected image/mask files
+Downloaded 40/414 selected image/mask files
+Downloaded 60/414 selected image/mask files
+Downloaded 80/414 selected image/mask files
+Downloaded 100/414 selected image/mask files
+Downloaded 120/414 selected image/mask files
+Downloaded 140/414 selected image/mask files
+Downloaded 160/414 selected image/mask files
+Downloaded 180/414 selected image/mask files
+Downloaded 200/414 selected image/mask files
+Downloaded 220/414 selected image/mask files
+Downloaded 240/414 selected image/mask files
+Downloaded 260/414 selected image/mask files
+Downloaded 280/414 selected image/mask files
+Downloaded 300/414 selected image/mask files
+Downloaded 320/414 selected image/mask files
+Downloaded 340/414 selected image/mask files
+Downloaded 360/414 selected image/mask files
+Downloaded 380/414 selected image/mask files
+Downloaded 400/414 selected image/mask files
+Downloaded 414/414 selected image/mask files
+[1/138] MCUCXR_0001_0.png: (4020, 4892), mask files=2
+[2/138] MCUCXR_0002_0.png: (4020, 4892), mask files=2
+[3/138] MCUCXR_0003_0.png: (4892, 4020), mask files=2
+[4/138] MCUCXR_0004_0.png: (4892, 4020), mask files=2
+[5/138] MCUCXR_0005_0.png: (4892, 4020), mask files=2
+[6/138] MCUCXR_0006_0.png: (4020, 4892), mask files=2
+[7/138] MCUCXR_0008_0.png: (4892, 4020), mask files=2
+[8/138] MCUCXR_0011_0.png: (4892, 4020), mask files=2
+[9/138] MCUCXR_0013_0.png: (4020, 4892), mask files=2
+[10/138] MCUCXR_0015_0.png: (4020, 4892), mask files=2
+[11/138] MCUCXR_0016_0.png: (4020, 4892), mask files=2
+[12/138] MCUCXR_0017_0.png: (4020, 4892), mask files=2
+[13/138] MCUCXR_0019_0.png: (4892, 4020), mask files=2
+[14/138] MCUCXR_0020_0.png: (4020, 4892), mask files=2
+[15/138] MCUCXR_0021_0.png: (4892, 4020), mask files=2
+[16/138] MCUCXR_0022_0.png: (4020, 4892), mask files=2
+[17/138] MCUCXR_0023_0.png: (4020, 4892), mask files=2
+[18/138] MCUCXR_0024_0.png: (4892, 4020), mask files=2
+[19/138] MCUCXR_0026_0.png: (4892, 4020), mask files=2
