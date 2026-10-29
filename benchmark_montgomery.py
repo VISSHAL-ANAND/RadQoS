@@ -82,9 +82,20 @@ def load_data():
         with Image.open(path) as im:
             mode = im.mode
             arr0 = np.asarray(im)
-        if arr0.ndim != 2 or arr0.dtype != np.uint8:
-            raise RuntimeError(f"High-bit-depth/non-grayscale source {filename}: mode={mode}, dtype={arr0.dtype}; refusing undocumented intensity conversion.")
-        arr = arr0.astype(np.uint8)
+        if arr0.ndim != 2:
+            raise RuntimeError(f"Non-grayscale source {filename}: mode={mode}, dtype={arr0.dtype}")
+        source_dtype = str(arr0.dtype)
+        source_min, source_max = int(arr0.min()), int(arr0.max())
+        if arr0.dtype == np.uint8:
+            arr = arr0.astype(np.uint8)
+            intensity_mapping = "identity_uint8"
+        elif np.issubdtype(arr0.dtype, np.integer) and source_min >= 0 and source_max <= 4095:
+            # Explicit, fixed full-range mapping for the source's 12-bit samples.
+            # This evaluates 8-bit renditions; it does NOT preserve native 12-bit precision.
+            arr = np.rint(arr0.astype(np.float32) * (255.0 / 4095.0)).clip(0,255).astype(np.uint8)
+            intensity_mapping = "fixed_linear_0_4095_to_0_255"
+        else:
+            raise RuntimeError(f"Unsupported source range for {filename}: mode={mode}, dtype={arr0.dtype}, min={source_min}, max={source_max}; no undocumented conversion applied.")
         mask = np.zeros_like(arr, dtype=bool)
         found = 0
         for md in ("MontgomerySet/ManualMask/leftMask", "MontgomerySet/ManualMask/rightMask"):
@@ -98,7 +109,7 @@ def load_data():
                 found += 1
         if found == 0:
             raise RuntimeError(f"No lung masks found for {filename}; refusing unmasked run")
-        out.append((filename, arr, mask, mode, found))
+        out.append((filename, arr, mask, mode, found, source_dtype, source_min, source_max, intensity_mapping))
     return out
 
 def main():
@@ -107,7 +118,7 @@ def main():
     rng = np.random.default_rng(SEED)
     estimator = {k: [v[0], (0.3*v[0])**2] for k,v in PROFILES.items()}
     quality_rows, delivery_rows, manifest_rows, candidate_rows = [], [], [], []
-    for ix,(name,orig,mask,mode,nmasks) in enumerate(data,1):
+    for ix,(name,orig,mask,mode,nmasks,source_dtype,source_min,source_max,intensity_mapping) in enumerate(data,1):
         candidates=[]
         for ratio in RATIOS:
             payload,rec=encode(orig,"JPEG2000",ratio)
@@ -171,7 +182,9 @@ def main():
                     "p2_residual_bytes":item.get("residual_bytes",np.nan)})
             delta=actual-mu; a=0.3
             estimator[prof]=[a*actual+(1-a)*mu, a*delta*delta+(1-a)*var]
-        manifest_rows.append({"image":name,"source_mode":mode,"dtype":str(orig.dtype),
+        manifest_rows.append({"image":name,"source_mode":mode,"source_dtype":source_dtype,
+                              "source_min":source_min,"source_max":source_max,
+                              "intensity_mapping":intensity_mapping,"benchmark_dtype":str(orig.dtype),
                               "width":orig.shape[1],"height":orig.shape[0],
                               "lung_mask_files_found":nmasks,"lung_mask_pixel_fraction":float(mask.mean())})
         print(f"[{ix}/{len(data)}] {name}: {orig.shape}, mask files={nmasks}",flush=True)
@@ -236,7 +249,7 @@ def main():
       "region_percentile":PERCENTILE,"grid":GRID,"max_abs_error":MAX_ERROR,
       "fixed_jpeg_quality":JPEG_Q,"fixed_j2k_ratio":FIXED_J2K,"latency_seconds":LATENCY,
       "profiles":PROFILES,"synthetic":False,
-      "notes":["Dataset images must be 8-bit grayscale; script stops instead of silently converting high-bit-depth data.",
+      "notes":["Native 8-bit sources are unchanged. Integer sources with values in 0..4095 are mapped by a fixed linear full-range conversion to 8-bit; results therefore describe 8-bit renditions, not native 12-bit preservation.",
       "The P2 residual is a separately encoded, losslessly compressed signed-pixel residual, not a progressive JPEG 2000 codestream.",
       "Network conditions are simulated and are not measured real-world traces.",
       "PSNR/SSIM do not establish diagnostic safety.",
