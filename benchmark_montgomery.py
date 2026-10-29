@@ -4,6 +4,7 @@ import io, json, math, struct, zlib
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from scipy.stats import wilcoxon
 from PIL import Image, features
 from huggingface_hub import snapshot_download
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
@@ -101,20 +102,21 @@ def main():
     data = load_data()
     rng = np.random.default_rng(SEED)
     estimator = {k: [v[0], (0.3*v[0])**2] for k,v in PROFILES.items()}
-    quality_rows, delivery_rows, manifest_rows = [], [], []
+    quality_rows, delivery_rows, manifest_rows, candidate_rows = [], [], [], []
     for ix,(name,orig,mask,mode,nmasks) in enumerate(data,1):
         candidates=[]
         for ratio in RATIOS:
             payload,rec=encode(orig,"JPEG2000",ratio)
-            candidates.append({"ratio":ratio,"payload":payload,"rec":rec,"size":len(payload),
-                               "m":metrics(orig,rec,mask)})
+            cm = metrics(orig,rec,mask)
+            candidates.append({"ratio":ratio,"payload":payload,"rec":rec,"size":len(payload),"m":cm})
+            candidate_rows.append({"image":name,"ratio":ratio,"payload_bytes":len(payload),**cm})
         jpeg,jrec=encode(orig,"JPEG",JPEG_Q)
         fixed=min(candidates,key=lambda c:abs(c["ratio"]-FIXED_J2K))
         mean_feasible=[c for c in candidates if c["m"]["ssim_mean"]>=Q_MIN]
         region_feasible=[c for c in candidates if c["m"]["lung_region_ssim_p05"]>=Q_MIN and c["m"]["max_abs_error"]<=MAX_ERROR]
-        mean_pick=max(mean_feasible,key=lambda c:c["ratio"]) if mean_feasible else min(candidates,key=lambda c:c["size"])
+        mean_pick=min(mean_feasible,key=lambda c:c["size"]) if mean_feasible else min(candidates,key=lambda c:c["size"])
         if region_feasible:
-            region_pick=max(region_feasible,key=lambda c:c["ratio"])
+            region_pick=min(region_feasible,key=lambda c:c["size"])
         else:
             lp=lossless_j2k(orig)
             lr=np.asarray(Image.open(io.BytesIO(lp)).convert("L"),dtype=np.uint8)
@@ -131,7 +133,7 @@ def main():
             mu,var=estimator[prof]
             b_lo=max(mu-math.sqrt(max(var,0)),0.1*mu)
             feasible=[c for c in candidates if c["size"]*8/b_lo+LATENCY<=deadline]
-            base=max(feasible,key=lambda c:c["ratio"]) if feasible else min(candidates,key=lambda c:c["size"])
+            base=min(feasible,key=lambda c:c["size"]) if feasible else min(candidates,key=lambda c:c["size"])
             resid=residual_bytes(orig,base["rec"])
             p2={"size":len(base["payload"])+len(resid),"first":len(base["payload"]),
                 "full":len(base["payload"])+len(resid),"m":metrics(orig,orig,mask),
@@ -174,14 +176,56 @@ def main():
     qdf.to_csv(out/"quality_by_image.csv",index=False)
     ddf.to_csv(out/"delivery_by_image_profile.csv",index=False)
     pd.DataFrame(manifest_rows).to_csv(out/"dataset_manifest.csv",index=False)
+    cdf=pd.DataFrame(candidate_rows)
+    cdf.to_csv(out/"candidate_diagnostics.csv",index=False)
     summary=ddf.groupby(["method","profile"],as_index=False).agg(
-      n_images=("image","nunique"),mean_full_payload_kb=("full_payload_kb","mean"),
+      n_images=("image","nunique"),n_images_quality_available=("psnr_db","count"),mean_full_payload_kb=("full_payload_kb","mean"),
       mean_psnr_db=("psnr_db","mean"),mean_ssim=("ssim_mean","mean"),
       mean_lung_region_ssim_p05=("lung_region_ssim_p05","mean"),
       full_delivery_miss_rate=("full_delivery_miss","mean"),
       quality_bound_met_by_deadline_rate=("quality_bound_met_by_deadline","mean"),
       mean_full_delivery_seconds=("full_delivery_seconds","mean"))
     summary.to_csv(out/"summary.csv",index=False)
+    # Paired per-image inference: P1 versus B3 for quality-bound selection.
+    stats=[]; boot_rng=np.random.default_rng(SEED)
+    for metric in ["payload_bytes","psnr_db","ssim_mean","lung_region_ssim_p05"]:
+        a=qdf[qdf.method=="B3_mean_ssim_single"].set_index("image")[metric]
+        b=qdf[qdf.method=="P1_lung_region_bound_single"].set_index("image")[metric]
+        pair=pd.concat([a.rename("b3"),b.rename("p1")],axis=1).dropna()
+        diff=(pair.p1-pair.b3).to_numpy(float)
+        if len(diff):
+            boot=np.array([boot_rng.choice(diff,size=len(diff),replace=True).mean() for _ in range(2000)])
+            try: p=float(wilcoxon(pair.p1,pair.b3,zero_method="wilcox").pvalue) if np.any(diff!=0) else 1.0
+            except ValueError: p=1.0
+            stats.append({"comparison":"P1_minus_B3","metric":metric,"n_pairs":len(diff),
+              "mean_difference":float(diff.mean()),"median_difference":float(np.median(diff)),
+              "bootstrap_ci95_low":float(np.percentile(boot,2.5)),
+              "bootstrap_ci95_high":float(np.percentile(boot,97.5)),
+              "wilcoxon_p_two_sided":p})
+    # Paired bootstrap for delivery differences (P2 minus P1) by network profile.
+    for prof in PROFILES:
+        g=ddf[ddf.profile==prof]
+        for metric in ["full_delivery_miss","quality_bound_met_by_deadline"]:
+            a=g[g.method=="P1_lung_region_bound_single"].set_index("image")[metric]
+            b=g[g.method=="P2_deadline_aware_base_residual"].set_index("image")[metric]
+            pair=pd.concat([a.rename("p1"),b.rename("p2")],axis=1).dropna()
+            diff=(pair.p2-pair.p1).to_numpy(float)
+            if len(diff):
+                boot=np.array([boot_rng.choice(diff,size=len(diff),replace=True).mean() for _ in range(2000)])
+                stats.append({"comparison":f"P2_minus_P1_{prof}","metric":metric,"n_pairs":len(diff),
+                  "mean_difference":float(diff.mean()),"median_difference":float(np.median(diff)),
+                  "bootstrap_ci95_low":float(np.percentile(boot,2.5)),
+                  "bootstrap_ci95_high":float(np.percentile(boot,97.5)),
+                  "wilcoxon_p_two_sided":float(wilcoxon(pair.p2,pair.p1,zero_method="wilcox").pvalue) if np.any(diff!=0) else 1.0})
+    pd.DataFrame(stats).to_csv(out/"paired_comparisons.csv",index=False)
+    # Check monotonicity only as a diagnostic; selection itself uses exhaustive evaluation.
+    mono=[]
+    for image,gg in cdf.sort_values("ratio").groupby("image"):
+        sizes=gg["payload_bytes"].to_numpy(); meanq=gg["ssim_mean"].to_numpy(); regionq=gg["lung_region_ssim_p05"].to_numpy()
+        mono.append({"image":image,"size_monotonic_violations":int(np.sum(np.diff(sizes)>0)),
+          "mean_ssim_monotonic_violations":int(np.sum(np.diff(meanq)>1e-9)),
+          "region_ssim_monotonic_violations":int(np.sum(np.diff(regionq)>1e-9))})
+    pd.DataFrame(mono).to_csv(out/"monotonicity_diagnostics.csv",index=False)
     meta={"dataset_repo":"Famatsu123/montgomery-shenzhen-tuberculosis-cxr",
       "subset":"all available MontgomerySet/CXR_png images with both manual lung masks",
       "n_images":len(data),"seed":SEED,"ratios":RATIOS,"q_min_ssim":Q_MIN,
