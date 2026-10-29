@@ -1,10 +1,4 @@
 Traceback (most recent call last):
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 298, in <module>
-    if __name__=="__main__": main()
-                             ^^^^^^
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 132, in main
-    data = load_data()
-           ^^^^^^^^^^^
-  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 86, in load_data
-    raise RuntimeError(f"No Montgomery PNGs found under {image_dir}; confirm official dataset download/unzip step.")
-RuntimeError: No Montgomery PNGs found under data/MontgomerySet/CXR_png; confirm official dataset download/unzip step.
+  File "/home/runner/work/research-papper/research-papper/benchmark_montgomery.py", line 8, in <module>
+    import PIL, scipy, skimage, huggingface_hub
+ModuleNotFoundError: No module named 'huggingface_hub'
