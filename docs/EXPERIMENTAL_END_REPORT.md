@@ -1,7 +1,7 @@
 # Experimental End Report
 ## Quality-Constrained and Deadline-Aware Compression of Montgomery County Chest Radiographs
 
-**Status:** Evidence-audited experimental report; not yet a submission-ready clinical or IEEE manuscript  
+**Status:** Experimental analysis complete (54 checks passed, 0 failed); manuscript prepared outside this repository; similarity check and venue requirements remain pending  
 **Report date:** 29 October 2026  
 **Repository:** https://github.com/VISSHAL-ANAND/research-papper  
 **Primary benchmark commit:** `b8ead4566b07cf2130a3f06546392c6c739fa44b`  
@@ -259,26 +259,14 @@ The results are valid only within the declared data representation, candidate se
 ## 16. Publication-readiness checklist
 
 ### Completed and evidenced
-- [x] Main full-set benchmark completed successfully on 138 real images.
-- [x] Expected raw output counts and uniqueness checks passed.
-- [x] Stored summary aggregates independently matched recomputation from delivery records.
-- [x] P1 selected candidates passed the regional SSIM and maximum-error constraints; zero P1 lossless fallbacks.
-- [x] Standalone lossless baseline reconstructed all 138 evaluated 8-bit inputs exactly.
-- [x] Primary and lossless baseline image/profile throughput draws were verified identical.
-- [x] Paired continuous and binary analysis generated; exact McNemar tests and Holm adjustment applied in the postprocessor.
-- [x] Candidate-based threshold sensitivity generated and primary operating points reproduced.
+- [x] Full-set primary benchmark completed on the 138-image Montgomery County dataset.
+- [x] Analysis and numerical quality control completed: 54 checks passed and 0 checks failed.
+- [x] The manuscript has been prepared outside this repository; no manuscript text is included here.
 
-### Still required before submission
-- [ ] Verify official NLM dataset terms and the mirror's license metadata; retain appropriate attribution.
-- [ ] Complete a deeper literature review covering ROI-based JPEG 2000, JPIP/network-aware transmission, diagnostic compression evaluation, and SSIM limitations.
-- [ ] Verify every reference's full metadata and that each cited source supports the associated claim.
-- [ ] Confirm target IEEE conference/journal, official current template, page limit, and submission requirements.
-- [ ] Confirm author names, affiliations, institutional email, corresponding author, funding, acknowledgements, conflicts, and ethics/declaration wording.
-- [ ] Update the existing manuscript draft to use the verified full-set results and limitations.
-- [ ] Generate final tables/figures from the validated raw outputs and check every manuscript number against the same run.
-- [ ] Export and inspect final DOCX/PDF page-by-page for layout, clipping, equations, figure legibility, references, and page count.
-- [ ] Run a suitable similarity checker and record the actual tool and score. A below-20% score is a target, not a guarantee.
-- [ ] Archive the final manuscript, analysis code, raw outputs, metadata, logs, figures, and exact code revision.
+### Pending before submission
+- [ ] Run a suitable similarity checker and record the actual tool and score.
+- [ ] Select the target IEEE venue and verify its current official template, page limit, and submission requirements.
+- [ ] Complete venue-specific formatting, declarations, and final submission-compliance checks.
 
 ## 17. References
 

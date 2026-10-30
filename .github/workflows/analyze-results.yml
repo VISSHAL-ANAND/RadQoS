@@ -2,9 +2,8 @@ name: Analyze completed Montgomery benchmark outputs
 
 on:
   push:
-    branches: [publication-readiness]
+    branches: [main]
     paths:
-      - "analysis_trigger.txt"
       - "analyze_results.py"
       - ".github/workflows/analyze-results.yml"
   workflow_dispatch:
@@ -17,20 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Check out analysis branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          path: analysis
-      - name: Check out current main results
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          path: main-repo
-      - name: Check out completed lossless baseline results
-        uses: actions/checkout@v4
-        with:
-          ref: lossless-baseline
-          path: lossless-repo
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -38,40 +25,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install numpy pandas scipy
-      - name: Check whether the full primary results exist
-        id: data
-        shell: bash
-        run: |
-          primary_required=(quality_by_image.csv delivery_by_image_profile.csv candidate_diagnostics.csv dataset_manifest.csv summary.csv paired_comparisons.csv monotonicity_diagnostics.csv run_metadata.json run.log)
-          lossless_required=(lossless_quality_by_image.csv lossless_delivery_by_image_profile.csv lossless_manifest.csv lossless_delivery_summary.csv run_metadata.json run.log)
-          missing=0
-          for f in "${primary_required[@]}"; do
-            if [ ! -f "main-repo/results/$f" ]; then
-              echo "Missing primary output: $f"
-              missing=1
-            fi
-          done
-          for f in "${lossless_required[@]}"; do
-            if [ ! -f "lossless-repo/lossless-results/$f" ]; then
-              echo "Missing lossless baseline output: $f"
-              missing=1
-            fi
-          done
-          if [ "$missing" -eq 0 ]; then echo "available=true" >> "$GITHUB_OUTPUT"; else echo "available=false" >> "$GITHUB_OUTPUT"; fi
       - name: Run quality control and publication statistics
-        if: steps.data.outputs.available == 'true'
         run: |
-          python analysis/analyze_results.py --results-dir main-repo/results --lossless-results-dir lossless-repo/lossless-results --output-dir analysis-output
-      - name: Record pending state if results are not yet available
-        if: steps.data.outputs.available != 'true'
-        run: |
-          mkdir -p analysis-output
-          printf '# Publication analysis pending\n\nThe completed primary benchmark outputs are not yet all present on main. No statistical results were generated.\n' > analysis-output/quality_control_report.md
+          python analyze_results.py --results-dir results --lossless-results-dir lossless-results --output-dir analysis-output
       - name: Upload analysis artifact
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: publication-analysis-report
           path: analysis-output/
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 30
