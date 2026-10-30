@@ -2,6 +2,33 @@
 
 This repository contains a reproducible evaluation of fixed JPEG and JPEG 2000 compression, a global-SSIM selector, a lung-mask regional selector, and a custom base-plus-residual representation. It evaluates 138 Montgomery County chest radiographs under three simulated bandwidth profiles with a 20-second delivery deadline. The benchmark runs in GitHub Actions, downloads the dataset at run time, and preserves the measured outputs and analysis needed to verify the paper.
 
+
+## Related work and comparison
+
+A closely related study is **MedROI: Codec-Agnostic Region of Interest-Centric Compression for Medical Images** by Jiwon Kim and Ikbeom Jang (April 2026). MedROI removes background voxels using an intensity-based tissue bounding box, stores compact spatial metadata, and then applies existing image codecs to the cropped region. It evaluates 200 T1-weighted brain MRI volumes from ADNI across six conventional and learned codec configurations, reporting compression-ratio and processing-time gains while maintaining ROI quality. Our study addresses a different, complementary question: how do practical compression and quality-selection strategies behave when chest radiographs must reach a receiver before a fixed delivery deadline under changing bandwidth? [Read MedROI on arXiv](https://arxiv.org/abs/2604.04511).
+
+A second, especially relevant comparison is **Adaptive Region-Aware Compression for Healthcare Applications in O-RAN** (Osman, Badawy, and Salem, 2026), which jointly considers ROI/non-ROI quality, latency, and computational limits in an O-RAN healthcare transmission setting ([DOI: 10.1111/exsy.70246](https://doi.org/10.1111/exsy.70246)). The studies overlap in their concern for region-aware medical-image delivery, but differ in system scope and experimental setup.
+
+| Comparison dimension | MedROI (Kim & Jang, 2026) | Adaptive Region-Aware Compression (Osman et al., 2026) | This study |
+|---|---|---|---|
+| Main focus | Remove non-tissue background before codec compression. | Joint ROI/non-ROI compression for healthcare fronthaul. | Compare compression and quality-selection strategies against a delivery deadline. |
+| Images evaluated | 200 T1-weighted brain MRI volumes from ADNI. | Chest X-rays and bone-fracture X-rays. | 138 Montgomery County chest radiographs. |
+| Region handling | Intensity-thresholded tissue bounding box, with metadata for spatial restoration. | Separate ROI and non-ROI regions with different quantisation. | Manual lung masks; local lung-region SSIM constraints on an 8×8 grid for P1. |
+| Network/deadline model | Reports compression ratio and encoding/decoding time; not the same three-profile, 20-second delivery experiment. | Explicit end-to-end latency and O-RAN resource constraints. | Simulated 128 kbps, 512 kbps, and 2 Mbps profiles, 0.5-second latency, and a 20-second deadline. |
+| Quality/evaluation | ROI reconstruction quality, compression ratio, and processing time. | Rate-distortion, latency/resource constraints, and reported diagnostic-accuracy evaluation. | PSNR, global SSIM, lung-region SSIM, error bounds, payload, and deadline outcomes; no clinical diagnostic-accuracy test. |
+| What the comparison supports | A complementary ROI-preprocessing strategy, not a direct numerical baseline for our results. | A closely related latency-aware ROI framework; our experiments are a smaller, reproducible CXR codec/selector comparison rather than an O-RAN system evaluation. | Evidence about which tested methods meet the chosen image-quality constraints before the simulated deadline on this dataset. |
+
+### What do our results show?
+
+For the tested Montgomery County images and simulated network profiles, **P1 (lung-region-constrained JPEG 2000)** met its defined quality bound by the 20-second deadline for 100.0% of images on the good profile, 99.3% on moderate, and 75.4% on poor. The global-SSIM selector (B3) achieved 74.6%, 74.6%, and 66.7%, respectively. These are results from our own experiment, not a head-to-head comparison with MedROI or the O-RAN method.
+
+| Method | Good bandwidth | Moderate bandwidth | Poor bandwidth |
+|---|---:|---:|---:|
+| B3 — global-SSIM selector | 74.6% | 74.6% | 66.7% |
+| **P1 — lung-region-constrained selector** | **100.0%** | **99.3%** | **75.4%** |
+
+**Does this solve the problem?** It provides a positive result for a narrow, measurable version of the problem: P1 improves the rate at which the selected lung-region quality bound is met before the simulated deadline, compared with the global-SSIM selector, on this 138-image dataset. It does **not** establish that the method is better than MedROI or the O-RAN framework, nor that it is ready for clinical deployment. Those claims would require a common-dataset, common-codec head-to-head experiment, real network measurements, broader multi-site data, and radiologist/diagnostic validation. The contribution should therefore be presented as a reproducible deadline-aware comparative evaluation, not as a universally superior compression algorithm.
+
 ## Dependencies
 
 The recorded primary benchmark environment used **Python 3.12.15** (Python 3.12 is required) and these exact package versions, read from `results/run_metadata.json`:
@@ -36,11 +63,11 @@ python -m pip install numpy pandas scipy
 
 ## Repository contents
 
-The timestamps below are UTC. For tracked files, they are the committer timestamps of the latest commit touching that path on the current repository history. The two evidence-directory timestamps come from their immutable run metadata. Files created or updated for this cleanup PR use the UTC time the cleanup content was prepared.
+The timestamps below are UTC. For tracked files, they are the committer timestamps of the latest commit touching that path on the current repository history. The two evidence-directory timestamps come from their immutable run metadata. Files created or updated for the repository cleanup use the UTC time the cleanup content was prepared; the README's related-work addition is marked by its update date.
 
 | File | Purpose | Finalized (UTC) |
 |---|---|---|
-| `README.md` | Project overview, dependencies, reproduction instructions, provenance, and limitations. | 2026-10-30T06:25:43Z |
+| `README.md` | Project overview, related-work comparison, dependencies, reproduction instructions, provenance, and limitations. | Updated 2026-10-30 UTC |
 | `.gitignore` | Excludes Python bytecode, local virtual environments, and generated analysis output. | 2026-10-30T06:25:43Z |
 | `benchmark_montgomery.py` | Primary image-compression benchmark; unchanged. | 2026-10-29 11:23:24 |
 | `supplemental_lossless_baseline.py` | Supplemental reversible JPEG 2000 baseline. | 2026-10-29 12:56:50 |
