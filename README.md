@@ -40,8 +40,8 @@ The timestamps below are UTC. For tracked files, they are the committer timestam
 
 | File | Purpose | Finalized (UTC) |
 |---|---|---|
-| `README.md` | Project overview, dependencies, reproduction instructions, provenance, and limitations. | 2026-10-30T06:22:35Z |
-| `.gitignore` | Excludes Python bytecode, local virtual environments, and generated analysis output. | 2026-10-30T06:22:35Z |
+| `README.md` | Project overview, dependencies, reproduction instructions, provenance, and limitations. | 2026-10-30T06:25:43Z |
+| `.gitignore` | Excludes Python bytecode, local virtual environments, and generated analysis output. | 2026-10-30T06:25:43Z |
 | `benchmark_montgomery.py` | Primary image-compression benchmark; unchanged. | 2026-10-29 11:23:24 |
 | `supplemental_lossless_baseline.py` | Supplemental reversible JPEG 2000 baseline. | 2026-10-29 12:56:50 |
 | `analyze_results.py` | Validates committed outputs and computes paired statistical analysis. | 2026-10-29 15:58:14 |
@@ -49,12 +49,12 @@ The timestamps below are UTC. For tracked files, they are the committer timestam
 | `tests/test_analyze_results.py` | Unit tests for analysis statistics and sensitivity calculations. | 2026-10-29 13:56:23 |
 | `docs/DATASET.md` | Dataset provenance, input representation, attribution, and terms. | 2026-10-29 16:31:50 |
 | `docs/EXPERIMENTS.md` | Experimental protocol and output definitions. | 2026-10-29 14:00:58 |
-| `docs/EXPERIMENTAL_END_REPORT.md` | Evidence-audited experimental results and publication status. | 2026-10-30T06:22:35Z |
+| `docs/EXPERIMENTAL_END_REPORT.md` | Evidence-audited experimental results and publication status. | 2026-10-30T06:25:43Z |
 | `.github/workflows/benchmark.yml` | Full 138-image benchmark workflow; unchanged. | 2026-10-29 11:20:30 |
-| `.github/workflows/lossless-baseline.yml` | Manually dispatched supplemental lossless baseline workflow. | 2026-10-30T06:22:35Z |
+| `.github/workflows/lossless-baseline.yml` | Manually dispatched supplemental lossless baseline workflow. | 2026-10-30T06:25:43Z |
 | `.github/workflows/provenance-check.yml` | Dataset provenance audit workflow; unchanged. | 2026-10-29 12:35:35 |
-| `.github/workflows/analyze-results.yml` | Runs output validation/statistical analysis and uploads its artifact. | 2026-10-30T06:22:35Z |
-| `.github/workflows/check-analysis.yml` | Compiles the analysis module and runs unit tests. | 2026-10-30T06:22:35Z |
+| `.github/workflows/analyze-results.yml` | Runs output validation/statistical analysis and uploads its artifact. | 2026-10-30T06:25:43Z |
+| `.github/workflows/check-analysis.yml` | Compiles the analysis module and runs unit tests. | 2026-10-30T06:25:43Z |
 | `results/` | Immutable primary benchmark evidence: CSV outputs, run log, and metadata. | 2026-10-29 14:37:48.676341 |
 | `lossless-results/` | Immutable supplemental lossless baseline evidence: CSV outputs, run log, and metadata. | 2026-10-29 13:54:33.671639 |
 
