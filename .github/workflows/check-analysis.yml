@@ -2,7 +2,7 @@ name: Validate publication analysis code
 
 on:
   push:
-    branches: [publication-readiness]
+    branches: [main]
     paths:
       - "analyze_results.py"
       - "tests/test_analyze_results.py"

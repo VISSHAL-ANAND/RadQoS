@@ -1,64 +1,95 @@
-# Deadline-aware adaptive compression of chest radiographs
+# Quality-Constrained and Deadline-Aware Compression of Chest Radiographs
 
-This repository evaluates a quality-constrained, deadline-aware compression pipeline on public Montgomery County chest radiographs. The benchmark runs in GitHub Actions so no local laptop setup is required.
+This repository contains a reproducible evaluation of fixed JPEG and JPEG 2000 compression, a global-SSIM selector, a lung-mask regional selector, and a custom base-plus-residual representation. It evaluates 138 Montgomery County chest radiographs under three simulated bandwidth profiles with a 20-second delivery deadline. The benchmark runs in GitHub Actions, downloads the dataset at run time, and preserves the measured outputs and analysis needed to verify the paper.
 
-## Documentation
+## Dependencies
 
-- [Project scope and success criteria](docs/PROJECT.md)
-- [Dataset provenance and limitations](docs/DATASET.md)
-- [Experimental protocol and output contract](docs/EXPERIMENTS.md)
-- [Research decisions and open questions](docs/DECISIONS.md)
-- [Testing and validation plan](docs/TESTING.md)
-- [IEEE publication checklist](docs/PUBLICATION.md)
-- [Current project state](docs/STATE.md)
-- [Prioritized publication tasks](docs/TASKS.md)
-- [Interaction log](docs/INTERACTION_LOG.md)
-- [Evidence-audited experimental end report](docs/EXPERIMENTAL_END_REPORT.md)
-- [IEEE manuscript author-review draft](docs/IEEE_MANUSCRIPT_AUTHOR_REVIEW_DRAFT.md) — includes measured results; requires author/venue details and final formatting
-- [Related-work and citation audit](docs/RELATED_WORK_AUDIT.md)
-- [Related-work audit](docs/RELATED_WORK_AUDIT.md)
-- [Manuscript revision map](docs/MANUSCRIPT_REVISION_MAP.md)
+The recorded primary benchmark environment used **Python 3.12.15** (Python 3.12 is required) and these exact package versions, read from `results/run_metadata.json`:
+
+| Package | Recorded version |
+|---|---:|
+| NumPy | 2.5.4 |
+| pandas | 3.1.0 |
+| Pillow | 13.0.0 |
+| SciPy | 1.18.1 |
+| scikit-image | 0.26.0 |
+| huggingface_hub | 2.3.0 |
+
+Package requirements by task:
+
+- **Primary benchmark (`benchmark_montgomery.py`):** all six packages listed above.
+- **Analysis and unit tests (`analyze_results.py`, `tests/`):** NumPy, pandas, and SciPy only.
+- **Supplemental lossless baseline (`supplemental_lossless_baseline.py`):** NumPy, pandas, Pillow, and huggingface_hub.
+- **Dataset acquisition:** an internet connection is required at run time to download the radiographs and lung masks from the Hugging Face dataset mirror. Source images and masks are not stored in this repository.
+
+Install the benchmark environment with:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+For analysis and tests only:
+
+```bash
+python -m pip install numpy pandas scipy
+```
+
+## Repository contents
+
+The timestamps below are UTC. For tracked files, they are the committer timestamps of the latest commit touching that path on the current repository history. The two evidence-directory timestamps come from their immutable run metadata. Files created or updated for this cleanup PR use the UTC time the cleanup content was prepared.
+
+| File | Purpose | Finalized (UTC) |
+|---|---|---|
+| `README.md` | Project overview, dependencies, reproduction instructions, provenance, and limitations. | 2026-10-30T06:22:35Z |
+| `.gitignore` | Excludes Python bytecode, local virtual environments, and generated analysis output. | 2026-10-30T06:22:35Z |
+| `benchmark_montgomery.py` | Primary image-compression benchmark; unchanged. | 2026-10-29 11:23:24 |
+| `supplemental_lossless_baseline.py` | Supplemental reversible JPEG 2000 baseline. | 2026-10-29 12:56:50 |
+| `analyze_results.py` | Validates committed outputs and computes paired statistical analysis. | 2026-10-29 15:58:14 |
+| `requirements.txt` | Primary benchmark dependency list; unchanged. | 2026-10-29 10:46:10 |
+| `tests/test_analyze_results.py` | Unit tests for analysis statistics and sensitivity calculations. | 2026-10-29 13:56:23 |
+| `docs/DATASET.md` | Dataset provenance, input representation, attribution, and terms. | 2026-10-29 16:31:50 |
+| `docs/EXPERIMENTS.md` | Experimental protocol and output definitions. | 2026-10-29 14:00:58 |
+| `docs/EXPERIMENTAL_END_REPORT.md` | Evidence-audited experimental results and publication status. | 2026-10-30T06:22:35Z |
+| `.github/workflows/benchmark.yml` | Full 138-image benchmark workflow; unchanged. | 2026-10-29 11:20:30 |
+| `.github/workflows/lossless-baseline.yml` | Manually dispatched supplemental lossless baseline workflow. | 2026-10-30T06:22:35Z |
+| `.github/workflows/provenance-check.yml` | Dataset provenance audit workflow; unchanged. | 2026-10-29 12:35:35 |
+| `.github/workflows/analyze-results.yml` | Runs output validation/statistical analysis and uploads its artifact. | 2026-10-30T06:22:35Z |
+| `.github/workflows/check-analysis.yml` | Compiles the analysis module and runs unit tests. | 2026-10-30T06:22:35Z |
+| `results/` | Immutable primary benchmark evidence: CSV outputs, run log, and metadata. | 2026-10-29 14:37:48.676341 |
+| `lossless-results/` | Immutable supplemental lossless baseline evidence: CSV outputs, run log, and metadata. | 2026-10-29 13:54:33.671639 |
+
+## Reproducing the results
+
+1. **Primary benchmark:** open the [Real-image compression benchmark workflow](.github/workflows/benchmark.yml) in GitHub Actions and run it with `workflow_dispatch`, or make a benchmark-triggering change only when a new four-hour experiment is intended. The workflow sets `MAX_IMAGES=0` to process all 138 images. **Locally, the script defaults `MAX_IMAGES` to 30 when the environment variable is not set**; set `MAX_IMAGES=0` explicitly for the full dataset.
+2. **Supplemental lossless baseline:** run the [Supplemental standalone lossless JPEG 2000 baseline workflow](.github/workflows/lossless-baseline.yml) manually with `workflow_dispatch`.
+3. **Analysis:** run the [analysis workflow](.github/workflows/analyze-results.yml), or validate and analyze the committed evidence locally:
+
+   ```bash
+   python -m unittest discover -s tests
+   python analyze_results.py --results-dir results --lossless-results-dir lossless-results --output-dir analysis-output
+   ```
+
+The committed primary and lossless results have been checked by the analysis pipeline: **Checks passed: 54, Checks failed: 0**. The analysis produces a quality-control report, adjusted paired-comparison table, and threshold-sensitivity table in `analysis-output/`.
+
+## CAUTION — benchmark workflow runtime
+
+Changing `benchmark_montgomery.py`, `requirements.txt`, or `.github/workflows/benchmark.yml` on `main` triggers the full benchmark workflow. It runs for about **4 hours** and publishes new results, overwriting the committed primary evidence. These files are deliberately unchanged by this cleanup.
 
 ## Dataset and attribution
 
-The workflow downloads selected files from the public Hugging Face mirror of the Montgomery County chest X-ray set, which preserves the NLM collection and manual lung masks. It contains 138 frontal chest radiographs (80 normal and 58 with TB-related findings) and manual left/right lung masks. The original dataset paper describes the images as 12-bit grayscale PNGs. The dataset is downloaded at run time and is not committed to this repository.
+The experiment uses the **Montgomery County chest X-ray set**, courtesy of the **U.S. National Library of Medicine (NLM)**. The benchmark downloads radiographs and manual lung masks at run time from a Hugging Face mirror; the source data are never committed here. The mirror's licence metadata is `other`, which is not a clear reuse licence. Follow the official NLM ReadMe and applicable terms, do not redistribute the images or masks, and do not imply NLM endorsement.
 
-- Hugging Face mirror: https://huggingface.co/datasets/Famatsu123/montgomery-shenzhen-tuberculosis-cxr
-- Official NLM dataset directory: https://data.lhncbc.nlm.nih.gov/public/Tuberculosis-Chest-X-ray-Datasets/Montgomery-County-CXR-Set/
-- Dataset paper: S. Jaeger et al., “Automatic tuberculosis screening using chest radiographs,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 233–245, Feb. 2014, doi: 10.1109/TMI.2013.2284099.
-- Related dataset description: https://pmc.ncbi.nlm.nih.gov/articles/PMC4256233/
+Cite both dataset papers:
 
-The Hugging Face mirror lists its licence metadata as `other`, which is not a clear reuse license. The official NLM ReadMe asks users not to share the dataset outside their research group/organization and requests attribution to NLM plus citations to both the tuberculosis-screening and lung-segmentation papers. NLM's general terms request the acknowledgment “Courtesy of the U.S. National Library of Medicine” and prohibit implying NLM endorsement. Do not commit or rehost source images or masks. See [Dataset provenance and limitations](docs/DATASET.md) for the terms reviewed and the required citations.
+1. S. Jaeger et al., “Automatic tuberculosis screening using chest radiographs,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 233–245, Feb. 2014, doi: [10.1109/TMI.2013.2284099](https://doi.org/10.1109/TMI.2013.2284099).
+2. S. Candemir et al., “Lung segmentation in chest radiographs using anatomical atlases with nonrigid registration,” *IEEE Transactions on Medical Imaging*, vol. 33, no. 2, pp. 577–590, Feb. 2014, doi: [10.1109/TMI.2013.2290491](https://doi.org/10.1109/TMI.2013.2290491).
 
-## Methods
+The requested acknowledgement is **“Courtesy of the U.S. National Library of Medicine.”** Attribution does not indicate NLM endorsement. Review [docs/DATASET.md](docs/DATASET.md) for the source description, public 8-bit representation, provenance evidence, and use restrictions. If intended use is unclear, contact NLM before submission.
 
-- **B1:** fixed JPEG quality 75.
-- **B2:** fixed JPEG 2000 target ratio 20.
-- **B3:** candidate with the smallest measured payload meeting global mean SSIM ≥ 0.95; if none meets the constraint, the highest-mean-SSIM candidate is selected and the infeasibility is visible in the results.
-- **P1:** candidate with the smallest measured payload meeting the fifth-percentile local SSIM bound over an 8×8 grid of lung-mask regions (threshold 0.95) and maximum absolute error ≤ 24; if none meets the bound, lossless JPEG 2000 is used.
-- **P2:** deadline-aware JPEG 2000 base plus a separately encoded zlib-compressed signed residual. The residual is decoded and verified to reconstruct the normalized 8-bit reference exactly.
+## Limitations
 
-The codec candidate ratios are `[4, 6, 8, 10, 15, 20, 30, 40, 60, 80, 120]`. Network profiles are simulated with mean bandwidths of 128 kbps, 512 kbps, and 2 Mbps; throughput varies lognormally, a conservative lower-bound estimate is updated, latency is set to 0.5 s, and the deadline is 20 s. These are simulation settings, not measurements of live networks.
-
-A GitHub Actions provenance audit checked the PNG IHDR header of every image in the official NLM `CXR_png` directory: all 138 headers report 8-bit grayscale, with 97 images at 4,892×4,020 and 41 at 4,020×4,892. For five pilot radiographs and their ten left/right masks, the Hugging Face files were byte-identical to the official NLM files by SHA-256 and byte count; the five radiographs were 8-bit grayscale and the masks were 1-bit PNGs. This conflicts with the original dataset paper's description of the images as 12-bit grayscale. The benchmark therefore reports the publicly distributed 8-bit PNG representation and makes no native 12-bit preservation claim. The run manifest records each image's hash, size, mode, dtype, sample range, mapping, dimensions, and mask coverage.
-
-## Reproduction
-
-The current GitHub Actions workflow is configured to evaluate all 138 Montgomery images (`MAX_IMAGES=0`) in a cloud runner; it downloads the source images and masks at run time and decodes one image at a time to limit RAM use. For a faster preliminary pilot, set `MAX_IMAGES=30`; a fixed seed controls the random sample. A successful full-set run is still limited to this one dataset and does not establish clinical safety. GitHub Actions publishes result files and diagnostics to the repository and uploads a downloadable artifact.
-
-Expected primary-run outputs in `results/`; the supplemental lossless baseline artifacts and code are also preserved in `lossless-results/`, `supplemental_lossless_baseline.py`, and `.github/workflows/lossless-baseline.yml`.
-
-Expected outputs in `results/`:
-- `quality_by_image.csv`: quality/size results for B1, B2, B3, and P1.
-- `delivery_by_image_profile.csv`: simulated delivery and deadline outcomes for each method/profile/image.
-- `candidate_diagnostics.csv`: per-image JPEG 2000 candidate sizes and quality metrics.
-- `summary.csv`: aggregate results by method and network profile.
-- `paired_comparisons.csv`: paired bootstrap confidence intervals and Wilcoxon comparisons.
-- `monotonicity_diagnostics.csv`: empirical codec size/quality monotonicity checks.
-- `dataset_manifest.csv`: source-image provenance and lung-mask metadata.
-- `run_metadata.json`: software versions, fixed parameters, timestamp and limitations.
-- `run.log`: console output and any traceback if a run fails.
-
-## Interpretation and limitations
-
-The set is small and limited to chest radiographs; it does not represent all scanners, populations, modalities, or clinical tasks. PSNR/SSIM do not establish diagnostic safety, and the experiment does not measure downstream diagnostic accuracy. P2 is a custom base-plus-residual representation, not a standards-compliant progressive JPEG 2000 codestream. The base selector exhaustively evaluates candidate encodings and prioritizes the regional quality/error constraint among candidates predicted to meet the deadline; actual outcomes are evaluated using simulated bandwidth draws. Network results are simulated. Report only outputs from a completed successful real-image run; do not fill manuscript tables from synthetic tests or assumed values.
+- The evaluation uses one dataset containing 138 radiographs; results may not generalize to other datasets, scanners, populations, or imaging tasks.
+- The public images evaluated are 8-bit grayscale PNGs; the results do not establish preservation of native 12-bit data.
+- Network conditions and deadline outcomes are simulated, not measured on a live network.
+- PSNR and SSIM are objective image metrics and do not establish diagnostic safety or diagnostic accuracy.
+- P2 is a custom JPEG 2000 base plus a separately compressed residual; it is **not** a standards-compliant progressive JPEG 2000 codestream.
